@@ -1,4 +1,4 @@
-# Architektura Mieszko Monitor
+# Architektura Sextet Monitor
 
 Stan kodu: 27.08.2026. End-to-end weryfikacja w toku; pełny status odbioru w raporcie odbioru Phase 1 (historyczny materiał lokalny, poza repozytorium). To opis istniejącej implementacji, nie lista wszystkich funkcji z pierwotnego briefu.
 

@@ -6,7 +6,7 @@ product
 
 ## Users
 
-Mieszko, one technically sophisticated user reading a private situational-awareness tool on his Mac. The approved brief prioritizes Poland, Europe, Turkey and major global disruptions. This is an operational view, not marketing.
+Members of a small group inspecting shared public-source records on desktop and mobile. A separate private installation retains local queries, briefings and history. The approved brief prioritizes Poland, Europe, Turkey and major global disruptions. This is an operational view, not marketing.
 
 ## Product Purpose
 

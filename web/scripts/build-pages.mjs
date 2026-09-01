@@ -10,7 +10,7 @@ const buildRoot = join(webRoot, ".pages-build");
 const require = createRequire(import.meta.url);
 const markerName = "OWNED";
 const marker = JSON.stringify({ format: 1, owner: "mieszko-monitor-pages-build", repository: repoRoot }) + "\n";
-const basePath = process.env.MONITOR_PAGES_BASE_PATH ?? "/mieszko-monitor";
+const basePath = process.env.MONITOR_PAGES_BASE_PATH ?? "/sextet-monitor";
 const sourceFiles = [
   "app/globals.css",
   ...["PublicMonitor", "EventMap", "EventList", "EventEvidence", "FilterPanel", "SourcePanel", "Icon"]
@@ -20,6 +20,7 @@ const sourceFiles = [
 ];
 const publicFiles = [
   "snapshot.json",
+  "icon.svg",
   "maps/countries.geojson",
   "maplibre/maplibre-gl.mjs",
   "maplibre/maplibre-gl-worker.mjs",
@@ -109,6 +110,15 @@ async function main() {
   if (!/^(?:\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*)?$/.test(basePath)) {
     throw new Error("MONITOR_PAGES_BASE_PATH musi być pusty albo mieć postać /nazwa-repo (bez końcowego /, kropki i znaków URL).");
   }
+  const configuredSiteUrl = process.env.MONITOR_PUBLIC_SITE_URL || "";
+  let publicSiteUrl;
+  if (configuredSiteUrl) {
+    const parsed = new URL(configuredSiteUrl);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.search || parsed.hash || parsed.pathname !== `${basePath}/`) {
+      throw new Error("MONITOR_PUBLIC_SITE_URL musi być adresem HTTPS strony, zgodnym z basePath, bez danych logowania i parametrów.");
+    }
+    publicSiteUrl = parsed.href;
+  }
   await ownedBuildExists();
   const snapshot = await optionalStat(join(webRoot, "public/snapshot.json"));
   if (!snapshot) {
@@ -150,7 +160,7 @@ async function main() {
   }
   await symlink(modulesPath, join(buildRoot, "node_modules"), "dir");
   await writeFile(join(buildRoot, "package.json"), JSON.stringify({
-    name: "mieszko-monitor-public-pages",
+    name: "sextet-monitor-public-pages",
     version: projectPackage.version,
     private: true,
     type: "module",
@@ -173,14 +183,26 @@ async function main() {
     images: { unoptimized: true },
   };\n`);
   await writeFile(join(buildRoot, "app/page.tsx"), 'import PublicMonitor from "@/components/PublicMonitor";\nexport default function Page() { return <PublicMonitor />; }\n');
+  const description = "Mapa zdarzeń i publiczne źródła: trzęsienia ziemi, ostrzeżenia pogodowe i podatności. Pochodzenie, daty i ograniczenia danych.";
+  const publicMetadata = {
+    title: "Sextet Monitor",
+    description,
+    robots: { index: false, follow: false },
+    icons: { icon: `${basePath}/icon.svg` },
+    openGraph: {
+      title: "Sextet Monitor",
+      siteName: "Sextet Monitor",
+      description,
+      type: "website",
+      locale: "pl_PL",
+      ...(publicSiteUrl ? { url: publicSiteUrl } : {}),
+    },
+    ...(publicSiteUrl ? { alternates: { canonical: publicSiteUrl } } : {}),
+  };
   await writeFile(join(buildRoot, "app/layout.tsx"), `import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
-export const metadata: Metadata = {
-  title: "Mieszko Monitor — publiczny podgląd",
-  description: "Publiczny, datowany podgląd źródeł. Dane ze źródeł publicznych wraz z opisem ograniczeń.",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = ${JSON.stringify(publicMetadata, null, 2)};
 export const viewport: Viewport = { width: "device-width", initialScale: 1, colorScheme: "dark", themeColor: "#171b1a" };
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return <html lang="pl"><body>{children}</body></html>;

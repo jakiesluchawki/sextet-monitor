@@ -2,6 +2,8 @@
 
 Poprawki po audycie lokalnej wersji z 27.08.2026.
 
+Nazwa wspólnego projektu i publicznej wersji to **Sextet Monitor**. Właściciel zatwierdził publiczne repozytorium oraz Pages. Zmieniono widoczną markę, slug, ikonę i metadane linku; zachowano techniczne identyfikatory istniejącej lokalnej instalacji, aby nie tworzyć pustego wolumenu bazy.
+
 - Briefing przetwarza cały zakres zmian partiami po 250 rekordów; limit 30 faktów dotyczy tekstu. W razie błędu kursor nie jest zapisywany. Briefing pokazuje rzeczywisty okres, kraj i liczniki.
 - Dane CISA są filtrowane według publikacji, a ostrzeżenia według ważności. Historia uwzględnia zakończone komunikaty bez wymyślania historycznego statusu ani czasu ataku.
 - Pytania i briefingi otrzymują rzeczywiste relacje między cytowanymi faktami.

@@ -47,7 +47,8 @@ jobs:
           npm run build:pages
         env:
           NEXT_TELEMETRY_DISABLED: '1'
-          MONITOR_PAGES_BASE_PATH: /mieszko-monitor
+          MONITOR_PAGES_BASE_PATH: /sextet-monitor
+          MONITOR_PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: web/.pages-build/out

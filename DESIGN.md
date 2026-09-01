@@ -2,7 +2,7 @@
 
 Register: product. Implemented in web/app/globals.css.
 
-Scene: Mieszko inspects changing public-source records on his Mac during an evening session with subdued room lighting. The approved dark-first brief uses quiet surfaces and readable text, not decorative effects.
+Scene: Members of a small group inspect changing public-source records on their computers and phones, including evening sessions with subdued room lighting. The approved dark-first brief uses quiet surfaces and readable text, not decorative effects.
 
 ## Tokens
 

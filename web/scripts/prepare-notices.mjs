@@ -5,7 +5,7 @@ import {fileURLToPath} from "node:url";
 const root=fileURLToPath(new URL("../",import.meta.url));
 const lock=JSON.parse(await readFile(join(root,"package-lock.json"),"utf8"));
 const parts=[
-  "Mieszko Monitor — notices for distributed third-party components",
+  "Sextet Monitor — notices for distributed third-party components",
   "This file preserves upstream notices. It does not license the application's original code.",
   "Map data: Natural Earth, public domain. https://www.naturalearthdata.com/about/terms-of-use/",
   "Public data: USGS with originating networks; MeteoAlarm/EUMETNET and IMGW-PIB (CC BY 4.0, transformed); CISA KEV (CC0). Source-specific links appear beside the evidence.",

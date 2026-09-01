@@ -75,7 +75,7 @@ class SafeHTTPClient:
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(25, connect=12), follow_redirects=False, trust_env=False,
             limits=httpx.Limits(max_connections=4, max_keepalive_connections=4),
-            headers={"User-Agent": "MieszkoMonitor/0.1 private-public-data-reader", "Accept": "*/*"},
+            headers={"User-Agent": "SextetMonitor/0.1 public-data-reader", "Accept": "*/*"},
             transport=transport,
         )
         self.validate_dns = validate_dns

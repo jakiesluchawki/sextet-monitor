@@ -1,6 +1,6 @@
 # Zależności i materiały zewnętrzne
 
-Sprawdzono lokalne metadane 27.08.2026. **Nie ustalano licencji udzielanej do autorskiego kodu Mieszko Monitor.** Ten dokument nie nadaje aplikacji licencji i nie zastępuje warunków poszczególnych pakietów. Nie dodajemy pliku LICENSE z domyślną licencją projektu.
+Sprawdzono lokalne metadane 27.08.2026. **Nie ustalano licencji udzielanej do autorskiego kodu Sextet Monitor.** Ten dokument nie nadaje aplikacji licencji i nie zastępuje warunków poszczególnych pakietów. Nie dodajemy pliku LICENSE z domyślną licencją projektu.
 
 Aplikacja powstała od zera, bez kopiowania kodu World Monitor/AGPL. Zależności pozostają odrębnymi utworami. Poniższa lista obejmuje główne komponenty; nie jest kompletnym SBOM ani zatwierdzeniem redystrybucji obrazów.
 

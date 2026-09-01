@@ -1,10 +1,10 @@
-# Mieszko Monitor
+# Sextet Monitor
 
-Prywatny, lokalny monitor zmian z mapą, listą zdarzeń i materiałem źródłowym. Kod Phase 1 powstał od zera, bez kopiowania World Monitor. Nie jest kompletnym obrazem świata ani narzędziem do decyzji operacyjnych o bezpieczeństwie.
+Monitor publicznych źródeł dla grupy: mapa, lista zdarzeń i materiał źródłowy. Pełna instalacja z prywatną historią i briefingami pozostaje lokalna. Kod Phase 1 powstał od zera, bez kopiowania World Monitor. Nie jest kompletnym obrazem świata ani narzędziem do decyzji operacyjnych o bezpieczeństwie.
 
 **Aktualizacja 1.09.2026:** poprawki przetwarzania danych, pytań, briefingów i odświeżania dowodów opisuje [CHANGELOG](CHANGELOG.md). Testy uruchamia też GitHub Actions. Formalna próba 72 godzin nadal nie została wykonana.
 
-Repozytorium obejmuje pełną instalację lokalną oraz **oddzielny statyczny podgląd**. GitHub Pages nie uruchamia backendu ani prywatnej bazy; zakres publiczny i wyłączoną domyślnie publikację opisuje [PUBLIC_PAGES](PUBLIC_PAGES.md).
+Repozytorium obejmuje pełną instalację lokalną oraz **oddzielny statyczny podgląd**. GitHub Pages nie uruchamia backendu ani prywatnej bazy; zakres zatwierdzonej publicznej wersji i kontrolowaną publikację opisuje [PUBLIC_PAGES](PUBLIC_PAGES.md).
 
 ## Co jest w tej wersji
 

@@ -2,7 +2,7 @@
 
 Pages służy do hostowania plików statycznych; nie uruchamia FastAPI, PostGIS ani stale działającego workera. Pełna instalacja nadal działa lokalnie. Osobny podgląd współdzieli komponenty mapy, listy i dowodów, ale nie udaje połączenia z prywatnym API.
 
-**Publikacja pozostaje wyłączona**, dopóki właściciel nie zaakceptuje publicznej widoczności i nie ustawi `PUBLIC_PAGES_ENABLED=true`. Podczas przygotowania 1.09.2026 GitHub odrzucił włączenie Pages dla prywatnego repozytorium na obecnym planie (HTTP 422). Nie zmieniamy automatycznie widoczności repozytorium ani planu płatnego. Prywatność repozytorium nie gwarantuje prywatności strony. [Dokumentacja GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
+**Publiczna wersja Sextet Monitor została zatwierdzona przez właściciela 1.09.2026** do udostępniania grupie. Kod i niezależnie pobrane publiczne źródła mogą być publikowane; prywatna baza, historia oraz sekrety pozostają lokalne. Publikacja wymaga `PUBLIC_PAGES_ENABLED=true`. Poprzednia próba dla prywatnego repozytorium była zablokowana przez plan GitHub (HTTP 422); publiczna widoczność jest teraz wyraźnie zaakceptowana, bez zmiany planu płatnego. Prywatność repozytorium nie gwarantuje prywatności strony. [Dokumentacja GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
 
 ## Co obejmuje zestaw
 
@@ -29,11 +29,11 @@ npm run typecheck
 npm run build:pages
 ~~~
 
-Katalog wynikowy: `web/.pages-build/out`. Skrypt kopiuje wyłącznie wskazane komponenty i pliki publiczne; nie kopiuje tras API, `.env`, baz, konfiguracji hosta ani prywatnego interfejsu. Katalog wynikowy ma znacznik `OWNED`; katalog bez zgodnego znacznika lub dowiązanie symboliczne powodują odmowę czyszczenia. `MONITOR_PAGES_BASE_PATH` domyślnie wynosi `/mieszko-monitor` i obejmuje mapę, workery, JS oraz JSON.
+Katalog wynikowy: `web/.pages-build/out`. Skrypt kopiuje wyłącznie wskazane komponenty i pliki publiczne; nie kopiuje tras API, `.env`, baz, konfiguracji hosta ani prywatnego interfejsu. Katalog wynikowy ma znacznik `OWNED`; katalog bez zgodnego znacznika lub dowiązanie symboliczne powodują odmowę czyszczenia. `MONITOR_PAGES_BASE_PATH` domyślnie wynosi `/sextet-monitor` i obejmuje mapę, workery, JS oraz JSON.
 
-## Publikacja po akceptacji
+## Publikacja
 
-Workflow `Public Pages` działa tylko na gałęzi `main` i po jawnym ustawieniu zmiennej repozytorium `PUBLIC_PAGES_ENABLED=true`. Ustawienia Pages muszą wskazywać GitHub Actions. Sam push kodu bez tej zmiennej niczego nie publikuje.
+Workflow `Public Pages` działa tylko na gałęzi `main` i po jawnym ustawieniu zmiennej repozytorium `PUBLIC_PAGES_ENABLED=true`. Ustawienia Pages muszą wskazywać GitHub Actions. Zmienna repozytorium `PUBLIC_SITE_URL` zawiera adres HTTPS zwrócony przez GitHub Pages; workflow przekazuje go jako `MONITOR_PUBLIC_SITE_URL` do danych Open Graph i adresu canonical. Sam push kodu bez włączonej zmiennej `PUBLIC_PAGES_ENABLED` niczego nie publikuje.
 
 Runner tworzy nowe losowe hasła, uruchamia testy i osobną bazę, pobiera publiczne źródła, buduje statyczny podgląd, a dopiero potem wysyła do Pages artefakt zawierający wyłącznie dozwolone pliki. Akcje są przypięte do pełnych SHA; uprawnienia do zapisu w Pages i wystawienia tokenu OIDC ma wyłącznie zadanie wdrożeniowe. Nie ma sekretów produkcyjnych ani połączenia z Makiem użytkownika.
 

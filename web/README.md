@@ -1,4 +1,4 @@
-# Mieszko Monitor web
+# Sextet Monitor web
 
 Polish local interface for the approved Phase 1 API. No simulated records, model switch, third-party fonts or remote map tiles.
 

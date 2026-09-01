@@ -11,6 +11,8 @@ import { countryName, coverageWarnings, eventTime, formatEventDate, safeHttpUrl,
 import { eventsToGeoJson } from "../lib/map-data";
 import { buildBackendUrl, isAllowedRoute, requestPolicyError } from "../lib/proxy-policy";
 import SourcePanel from "../components/SourcePanel";
+import Monitor from "../components/Monitor";
+import PublicMonitor from "../components/PublicMonitor";
 import EventEvidence, { shouldRevealEvidence } from "../components/EventEvidence";
 import AnalysisPanel from "../components/AnalysisPanel";
 import FilterPanel from "../components/FilterPanel";
@@ -33,6 +35,15 @@ function eventFixture(overrides:Partial<EventSummary>={}):EventSummary {
 function sourceFixture(overrides:Partial<SourceStatus>={}):SourceStatus {
   return {id:"fixture",name:"Źródło testowe",status:"pending",enabled:true,requires_key:false,last_attempt_at:null,last_success_at:null,newest_content_at:null,next_due_at:null,record_count:0,error:null,poll_interval_seconds:600,coverage:"Pokrycie testowe",license_name:"Licencja testowa",license_url:null,attribution:"Tylko fixture testowy",...overrides};
 }
+
+test("both editions use shared Sextet branding rather than a personal monitor name",()=>{
+  for(const component of [Monitor,PublicMonitor]){
+    const markup=renderToStaticMarkup(React.createElement(component));
+    assert.match(markup,/<h1>Sextet Monitor<\/h1>/);
+    assert.doesNotMatch(markup,/mieszko/i);
+    assert.match(markup,/class="brand-mark"[^>]*>s<span/);
+  }
+});
 
 test("one serialization preserves a complete radius, temporal basis and independent-source filter",()=>{
   const query={...DEFAULT_QUERY,time_basis:"changed" as const,country:"PL",min_sources:2,lat:52.2297,lon:21.0122,radius_km:500};
@@ -421,9 +432,9 @@ test("public category and country filters keep one sorted bounded map/list resul
   assert.equal(changePublicQuery(next,{category:"weather"}).time_basis,"validity");
 });
 test("public assets stay inside the declared Pages path and age is honest for old datasets",()=>{
-  assert.equal(assetPath("/snapshot.json","/mieszko-monitor"),"/mieszko-monitor/snapshot.json");
+  assert.equal(assetPath("/snapshot.json","/sextet-monitor"),"/sextet-monitor/snapshot.json");
   assert.equal(assetPath("/maplibre/maplibre-gl-worker.mjs",""),"/maplibre/maplibre-gl-worker.mjs");
-  for(const path of ["https://example.invalid/snapshot.json","//example.invalid/snapshot.json","/../snapshot.json"]){assert.throws(()=>assetPath(path,"/mieszko-monitor"));}
+  for(const path of ["https://example.invalid/snapshot.json","//example.invalid/snapshot.json","/../snapshot.json"]){assert.throws(()=>assetPath(path,"/sextet-monitor"));}
   assert.throws(()=>assetPath("/snapshot.json","/../private"));
   assert.match(snapshotAge("2026-08-27T12:00:00Z",Date.parse("2026-08-30T12:00:00Z")),/3 dni/);
   assert.match(snapshotAge("2026-08-27T12:00:00Z",Date.parse("2026-08-27T11:00:00Z")),/zegar/);

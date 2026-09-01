@@ -1,4 +1,4 @@
-# Mieszko Monitor
+# Sextet Monitor
 
 Private single-user Phase 1, approved on 2026-08-27. Work incrementally. Never copy World Monitor code. Source code licenses do not grant upstream data rights.
 

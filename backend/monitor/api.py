@@ -420,7 +420,7 @@ def add_cited_relations(connection, result: dict) -> None:
 
 def create_app(settings: Settings | None = None, *, testing: bool = False) -> FastAPI:
     application = FastAPI(
-        title="Mieszko Monitor", version=__version__, docs_url=None, redoc_url=None, openapi_url=None,
+        title="Sextet Monitor", version=__version__, docs_url=None, redoc_url=None, openapi_url=None,
     )
     application.state.settings = settings
     application.add_middleware(
