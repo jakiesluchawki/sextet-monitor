@@ -411,6 +411,24 @@ def test_cap_maintenance_activates_then_expires_without_faking_another_read(db):
     assert count(db, "observations") == 1 and count(db, "event_revisions") == 3
 
 
+def test_swpc_forecast_maintenance_preserves_original_evidence_and_read_clock(db):
+    warning = NormalizedEvent(
+        source_id="noaa_swpc", provider_record_id="ALTK06-test", kind="advisory", category="space_weather",
+        title="Synthetic SWPC forecast", source_url="https://www.swpc.noaa.gov/products/alerts-watches-and-warnings",
+        issued_at=NOW, valid_from=NOW+timedelta(hours=1), valid_to=NOW+timedelta(hours=4),
+        lifecycle_status="unknown", origins=["noaa:swpc"], tags=["forecast", "advisory"],
+        raw={"product_id": "ALTK06-test", "issue_datetime": NOW.isoformat()},
+    )
+    ingest(db, "noaa_swpc", [warning])
+    assert expire_advisories(db, NOW+timedelta(hours=2)) == 1
+    row = db.execute(text("SELECT * FROM events")).mappings().one()
+    assert row["lifecycle_status"] == "active" and row["last_seen_at"] == NOW and row["occurred_start"] is None
+    assert expire_advisories(db, NOW+timedelta(hours=4)) == 1
+    immutable = db.execute(text("SELECT normalized,raw FROM observations")).mappings().one()
+    assert immutable["normalized"]["lifecycle_status"] == "unknown" and immutable["raw"] == warning.raw
+    assert count(db, "observations") == 1 and count(db, "event_revisions") == 3
+
+
 def usgs_batch(kind="earthquake", revision=0, record_id="us-test-quake", aliases=None):
     from monitor.contracts import FetchedDocument
     from monitor.providers import usgs

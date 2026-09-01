@@ -15,7 +15,7 @@ class NormalizedEvent(BaseModel):
     source_id: str
     provider_record_id: str
     kind: Literal["incident", "advisory", "vulnerability_notice", "measurement"]
-    category: Literal["earthquake", "disaster", "weather", "aviation", "cyber", "internet"]
+    category: Literal["earthquake", "disaster", "weather", "aviation", "cyber", "internet", "space_weather"]
     title: str = Field(min_length=1, max_length=800)
     description: str = Field(default="", max_length=12000)
     source_url: str
@@ -92,7 +92,7 @@ class EventQuery(BaseModel):
     until: datetime | None = None
     country: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
     region: Literal["europe"] | None = None
-    category: Literal["earthquake", "disaster", "weather", "aviation", "cyber", "internet"] | None = None
+    category: Literal["earthquake", "disaster", "weather", "aviation", "cyber", "internet", "space_weather"] | None = None
     severity_min: int = Field(default=0, ge=0, le=4)
     min_sources: int = Field(default=1, ge=1, le=10)
     lat: float | None = Field(default=None, ge=-90, le=90)

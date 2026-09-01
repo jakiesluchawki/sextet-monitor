@@ -91,4 +91,4 @@ Implementacja aplikacji nie zawiera skopiowanego kodu World Monitor/AGPL. Nie oz
 
 ## Oddzielny publiczny zestaw
 
-[Public Pages](PUBLIC_PAGES.md) nie uruchamia lokalnego API. Generator tworzy nową bazę monitor_public_* z allowlistą trzech źródeł i usuwa ją po eksporcie przetworzonych pól. Publiczny entrypoint nie zawiera routingu API, sekretów ani prywatnej historii. Artefakt jest niezależny od wolumenu prywatnej instalacji.
+[Public Pages](PUBLIC_PAGES.md) nie uruchamia lokalnego API. Generator tworzy nową bazę monitor_public_* z allowlistą dziewięciu źródeł i usuwa ją po eksporcie przetworzonych pól. Publiczny entrypoint nie zawiera routingu API, sekretów ani prywatnej historii. Artefakt jest niezależny od wolumenu prywatnej instalacji. Awaria pojedynczego dostawcy może użyć zweryfikowanego poprzedniego publicznego odczytu, z zachowanymi datami i jawnym statusem błędu. Ten mechanizm nie odczytuje prywatnej bazy ani lokalnego snapshotu.

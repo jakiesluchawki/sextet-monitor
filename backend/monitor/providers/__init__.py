@@ -1,4 +1,4 @@
-"""Adapters for the six approved sources; all network access is injected."""
+"""Reviewed public-data adapters; all network access is injected."""
 from __future__ import annotations
 
 from importlib import import_module
@@ -16,9 +16,9 @@ SOURCES: dict[str, SourceSpec] = {
     ),
     "gdacs": SourceSpec(
         id="gdacs", name="GDACS · większe katastrofy", poll_interval_seconds=900,
-        coverage="Globalne katastrofy o potencjalnym wpływie humanitarnym; nie wszystkie lokalne zdarzenia.",
+        coverage="Globalne katastrofy o potencjalnym wpływie humanitarnym. Automatyczne oceny GDACS nie zastępują krajowych ostrzeżeń; nie wszystkie lokalne zdarzenia.",
         license_name="Reuse with attribution; prawa produktów źródłowych",
-        license_url="https://gdacs.org/About/termofuse.aspx",
+        license_url="https://www.gdacs.org/Documents/2025/GDACS_Terms_of_use_Mar_25.pdf",
         attribution="Global Disaster Awareness and Coordination System, GDACS",
     ),
     "meteoalarm": SourceSpec(
@@ -42,6 +42,34 @@ SOURCES: dict[str, SourceSpec] = {
         license_url="https://github.com/cisagov/kev-data/blob/develop/LICENSE",
         attribution="Cybersecurity and Infrastructure Security Agency (CISA)",
     ),
+    "nasa_eonet": SourceSpec(
+        id="nasa_eonet", name="NASA EONET · pożary, wulkany i burze", poll_interval_seconds=900,
+        coverage="Kuratorskie metadane globalnych pożarów, wulkanów i silnych burz; okno API 30 dni, maksymalnie 400 rekordów. Przybliżone miejsce i czas; nie wszystkie lokalne zdarzenia.",
+        license_name="NASA EONET — metadane informacyjne; zachowano prawa źródeł",
+        license_url="https://eonet.gsfc.nasa.gov/what-is-eonet",
+        attribution="NASA EONET i źródła wskazane w metadanych; dane przetworzone, bez obrazów i poparcia NASA",
+    ),
+    "noaa_swpc": SourceSpec(
+        id="noaa_swpc", name="NOAA SWPC · pogoda kosmiczna", poll_interval_seconds=300,
+        coverage="Biuletyny SWPC: obserwowane alerty i podsumowania oraz osobno prognozy i ostrzeżenia. Do 400 komunikatów z ostatnich 30 dni; bez lokalizacji zakłóceń GPS i pełnego archiwum.",
+        license_name="NOAA/NWS public domain; bez sugerowania poparcia",
+        license_url="https://www.weather.gov/disclaimer",
+        attribution="NOAA/NWS Space Weather Prediction Center; dane przetworzone, oryginalny komunikat w źródle",
+    ),
+    "github_status": SourceSpec(
+        id="github_status", name="GitHub Status · dostępność usług", poll_interval_seconds=300,
+        coverage="Ostatnie 50 incydentów zgłoszonych przez GitHub; niepełne archiwum, bez globalnego pomiaru Internetu i lokalizacji.",
+        license_name="Publiczne API; metadane statusu bez pełnych komunikatów",
+        license_url="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service#h-api-terms",
+        attribution="GitHub Status; metadane przetworzone, komunikaty dostępne u źródła",
+    ),
+    "cloudflare_status": SourceSpec(
+        id="cloudflare_status", name="Cloudflare Status · dostępność usług", poll_interval_seconds=300,
+        coverage="Ostatnie 50 incydentów zgłoszonych przez Cloudflare; niepełne archiwum, bez globalnego pomiaru Internetu i lokalizacji. To nie Cloudflare Radar.",
+        license_name="Publiczne API; metadane statusu bez pełnych komunikatów",
+        license_url="https://www.cloudflare.com/policies/terms/",
+        attribution="Cloudflare Status; metadane przetworzone, komunikaty dostępne u źródła",
+    ),
     "cloudflare_radar": SourceSpec(
         id="cloudflare_radar", name="Cloudflare Radar · zakłócenia Internetu",
         poll_interval_seconds=300, requires_key=True,
@@ -55,6 +83,8 @@ SOURCES: dict[str, SourceSpec] = {
 _MODULES = {
     "usgs": "usgs", "gdacs": "gdacs", "meteoalarm": "meteoalarm",
     "easa_czib": "easa", "cisa_kev": "cisa", "cloudflare_radar": "radar",
+    "nasa_eonet": "eonet", "noaa_swpc": "swpc",
+    "github_status": "github_status", "cloudflare_status": "cloudflare_status",
 }
 
 

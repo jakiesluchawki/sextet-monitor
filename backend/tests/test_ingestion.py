@@ -206,6 +206,31 @@ def test_cap_clock_never_revives_terminal_state_or_guesses_missing_expiry(status
     assert effective_event_state(record.model_dump(mode="json"), NOW)["lifecycle_status"] == expected
 
 
+@pytest.mark.parametrize("elapsed,expected", [(0, "unknown"), (1, "active"), (2, "active"), (4, "expired")])
+def test_swpc_forecast_uses_only_its_declared_validity_without_mutating_observation(elapsed, expected):
+    from monitor.lifecycle import effective_event_state
+    record = event(source_id="noaa_swpc", category="space_weather", lifecycle_status="unknown",
+                   valid_from=NOW+timedelta(hours=1), valid_to=NOW+timedelta(hours=4),
+                   issued_at=NOW, occurred_start=None, tags=["forecast", "advisory"]).model_dump(mode="json")
+    current = effective_event_state(record, NOW+timedelta(hours=elapsed))
+    assert current["lifecycle_status"] == expected
+    assert record["lifecycle_status"] == "unknown" and current["issued_at"] == record["issued_at"]
+    assert current["occurred_start"] is None
+
+
+@pytest.mark.parametrize("status,start,end,expected", [
+    ("withdrawn", NOW, NOW+timedelta(hours=1), "withdrawn"),
+    ("expired", NOW, NOW+timedelta(hours=1), "expired"),
+    ("unknown", NOW, None, "unknown"),
+    ("unknown", None, NOW+timedelta(hours=1), "unknown"),
+])
+def test_swpc_forecast_never_invents_validity_or_revives_terminal_state(status, start, end, expected):
+    from monitor.lifecycle import effective_event_state
+    record = event(source_id="noaa_swpc", category="space_weather", lifecycle_status=status,
+                   valid_from=start, valid_to=end).model_dump(mode="json")
+    assert effective_event_state(record, NOW)["lifecycle_status"] == expected
+
+
 @pytest.mark.parametrize("incoming,previous,expected", [
     ("2", "1", True), ("1", "2", False), ("2", "2", False), ("new", "1", False),
 ])

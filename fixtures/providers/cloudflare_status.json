@@ -1,0 +1,37 @@
+{
+  "_fixture_notice": "Synthetic schema fixture only; never a live incident.",
+  "page": {
+    "id": "cffixture001",
+    "name": "Cloudflare",
+    "url": "https://www.cloudflarestatus.com"
+  },
+  "incidents": [
+    {
+      "id": "testcf000001",
+      "name": "Synthetic Cloudflare Workflows incident",
+      "status": "investigating",
+      "impact": "minor",
+      "started_at": "2026-08-26T08:00:00Z",
+      "created_at": "2026-08-26T08:05:00Z",
+      "updated_at": "2026-08-26T10:00:00Z",
+      "resolved_at": null,
+      "shortlink": "https://www.cloudflarestatus.com/incidents/testcf000001",
+      "components": [
+        {
+          "id": "testcomp0002",
+          "name": "Workflows",
+          "status": "major_outage",
+          "description": "TEST_ONLY_COMPONENT_PROSE"
+        }
+      ],
+      "incident_updates": [
+        {
+          "id": "testup000002",
+          "body": "TEST_ONLY_UPDATE_TEXT",
+          "status": "investigating"
+        }
+      ],
+      "postmortem_body": "TEST_ONLY_POSTMORTEM_TEXT"
+    }
+  ]
+}

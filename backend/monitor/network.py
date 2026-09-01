@@ -22,6 +22,10 @@ ALLOWED_PREFIXES = {
     "raw.githubusercontent.com": ("/cisagov/kev-data/",),
     "www.cisa.gov": ("/sites/default/files/feeds/",),
     "api.cloudflare.com": ("/client/v4/radar/",),
+    "eonet.gsfc.nasa.gov": ("/api/v3/events",),
+    "services.swpc.noaa.gov": ("/products/alerts.json",),
+    "www.githubstatus.com": ("/api/v2/incidents.json",),
+    "www.cloudflarestatus.com": ("/api/v2/incidents.json",),
 }
 
 

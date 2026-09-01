@@ -4,6 +4,14 @@ Poprawki po audycie lokalnej wersji z 27.08.2026.
 
 Nazwa wspólnego projektu i publicznej wersji to **Sextet Monitor**. Właściciel zatwierdził publiczne repozytorium oraz Pages. Zmieniono widoczną markę, slug, ikonę i metadane linku; zachowano techniczne identyfikatory istniejącej lokalnej instalacji, aby nie tworzyć pustego wolumenu bazy.
 
+Rozszerzenie źródeł dla grupy:
+
+- Pages obejmuje dziewięć źródeł zamiast trzech: dołączono GDACS, EASA, NASA EONET, NOAA SWPC, GitHub Status i Cloudflare Status. Każdy dostawca ma jawne pokrycie, pochodzenie, daty i ograniczenia.
+- Dodano wybór konkretnego źródła oraz rozdzielenie liczników udanych niepustych odczytów, pustych odpowiedzi, częściowych danych i błędów. Kategorie i podstawa czasu dostosowują się do rodzaju materiału; brak geolokalizacji nie usuwa danych z listy.
+- Publiczny odczyt toleruje awarię jednego dostawcy. Opcjonalnie zachowuje poprzednie, zweryfikowane dane wyłącznie z publicznej strony, z dawnymi datami i jawnym błędem źródła. Awaria wszystkich źródeł nadal zatrzymuje publikację.
+- SWPC odróżnia obserwacje od prognoz; ważność prognozy jest przeliczana bez tworzenia fałszywego nowego odczytu. Nie wytwarza punktów rzekomych zakłóceń GPS.
+- Statusy operatorów zachowują tylko metadane incydentów; nie kopiują tekstów aktualizacji ani postmortemów i nie udają globalnego pomiaru Internetu.
+
 - Briefing przetwarza cały zakres zmian partiami po 250 rekordów; limit 30 faktów dotyczy tekstu. W razie błędu kursor nie jest zapisywany. Briefing pokazuje rzeczywisty okres, kraj i liczniki.
 - Dane CISA są filtrowane według publikacji, a ostrzeżenia według ważności. Historia uwzględnia zakończone komunikaty bez wymyślania historycznego statusu ani czasu ataku.
 - Pytania i briefingi otrzymują rzeczywiste relacje między cytowanymi faktami.

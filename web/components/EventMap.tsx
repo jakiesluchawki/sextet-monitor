@@ -9,7 +9,7 @@ import { assetPath } from "@/lib/assets";
 import { Icon } from "./Icon";
 
 const EMPTY: FeatureCollection = {type:"FeatureCollection",features:[]};
-const CATEGORY_COLOR: ExpressionSpecification = ["match",["get","category"],"earthquake","#d4af76","disaster","#cd967d","weather","#7db7ce","aviation","#a7b2d9","cyber","#b3a1c9","internet","#8cbcac","#a4b3a5"];
+const CATEGORY_COLOR: ExpressionSpecification = ["match",["get","category"],"earthquake","#d4af76","disaster","#cd967d","weather","#7db7ce","aviation","#a7b2d9","cyber","#b3a1c9","internet","#8cbcac","space_weather","#c6a17e","#a4b3a5"];
 const STYLE: StyleSpecification = {
   version:8,
   sources:{countries:{type:"geojson",data:assetPath("/maps/countries.geojson"),attribution:"Natural Earth"}},

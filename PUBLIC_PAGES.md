@@ -6,13 +6,19 @@ Pages służy do hostowania plików statycznych; nie uruchamia FastAPI, PostGIS 
 
 ## Co obejmuje zestaw
 
-Zestaw obejmuje dane USGS, MeteoAlarm Polska i CISA KEV, pobrane od nowa do oddzielnej bazy. Podgląd zawiera mapę, listę i oś czasu, filtry kategorii, wagi i kraju, źródłowe daty wystąpienia, publikacji i ważności, odnośniki, atrybucję oraz jawny wiek zestawu. Domyślne okno kończy się w chwili przygotowania zestawu, a nie w pozornym „teraz” po tygodniu bez odświeżenia.
+Zestaw obejmuje **dziewięć źródeł**: USGS, MeteoAlarm Polska, CISA KEV, GDACS, EASA CZIB, NASA EONET, NOAA SWPC, GitHub Status i Cloudflare Status, pobrane od nowa do oddzielnej bazy. Podgląd zawiera mapę, listę i oś czasu, wybór źródła, filtry kategorii, wagi i kraju, źródłowe daty wystąpienia, publikacji i ważności, odnośniki, atrybucję oraz jawny wiek zestawu. Domyślne okno kończy się w chwili przygotowania zestawu, a nie w pozornym „teraz” po tygodniu bez odświeżenia.
 
-Nie ma pytań do prywatnej bazy, briefingu od poprzedniego, historii operatora, surowych payloadów, promienia PostGIS, filtra Europy, AI ani tokenów. GDACS, EASA i Radar pozostają poza publicznym zestawem. „Odśwież” pobiera nowszy opublikowany plik; nie steruje prywatnym workerem.
+Nie ma pytań do prywatnej bazy, briefingu od poprzedniego, historii operatora, surowych payloadów, promienia PostGIS, filtra Europy, AI ani tokenów. Radar pozostaje poza publicznym zestawem. „Odśwież” pobiera nowszy opublikowany plik; nie steruje prywatnym workerem.
+
+NASA obejmuje do 400 wpisów z 30 dni o pożarach, wulkanach i silnych burzach; osiągnięcie limitu daje `partial`, nie zapewnienie kompletności. EASA opisuje ryzyko operacji lotniczych, bez wymyślania daty ataku. NOAA oddziela obserwowane alerty i podsumowania od prognoz/ostrzeżeń, bez lokalizacji awarii GPS. Statusy GitHuba i Cloudflare to ostatnie 50 incydentów każdego operatora, nie pełne archiwa ani globalny pomiar Internetu. Licznik źródeł nie jest liczbą niezależnych potwierdzeń zdarzenia.
 
 Generator nie przyjmuje nazwy istniejącej bazy do eksportu. Połączenie administracyjne musi wskazywać `postgres`; skrypt sam tworzy `monitor_public_<losowy-id>`, wykonuje migracje i pobrania, a następnie usuwa wyłącznie utworzoną bazę. Źródła są zapisane na jawnej liście dozwolonych dostawców. Publiczne UUID powstają z identyfikatorów dostawców, nie są UUID prywatnego monitora. Kontrakt usuwa wewnętrzne pola, surowe dane (`raw`), rewizje i szczegóły błędów.
 
-Limit zestawu: 10 000 zdarzeń i 16 MiB. Błąd źródła lub schematu albo przekroczenie limitu zatrzymuje przygotowanie publikacji. Jeśli strona była wcześniej opublikowana, pozostaje bez zmian. Częściowy odczyt jest jawnie oznaczony. Plik snapshotu i katalog wynikowy są ignorowane przez Git. Nie publikujemy zrzutów baz ani obrazów usług.
+Limit zestawu: 10 000 zdarzeń i 16 MiB. Błąd jednego dostawcy nie zatrzymuje odczytu pozostałych. Jeśli `MONITOR_PUBLIC_SITE_URL` wskazuje dozwolony publiczny adres GitHub Pages, generator może odczytać poprzedni **już opublikowany** zestaw. Wymagane są poprawny schemat, dozwolone źródła, publiczne UUID wyliczalne z metadanych dostawcy, brak raw/rewizji oraz poprawne daty. Pobranie ma ograniczony czas i rozmiar, sprawdza publiczny DNS i nie podąża za przekierowaniami. Nie czyta lokalnego snapshotu ani prywatnej bazy jako danych zastępczych.
+
+Poprzednie rekordy uszkodzonego źródła zachowują wszystkie daty dowodów i znacznik `cached_public_data`; źródło nadal ma stan `error`, stary czas ostatniego sukcesu i liczbę rzeczywiście zachowanych rekordów. Nie uzupełniamy w ten sposób poprawnego pustego ani częściowego odczytu z przyjętymi rekordami. Odczyt `partial`, w którym nie przyjęto żadnych poprawnych rekordów, jest dla publikacji błędem. Dawnego rekordu łączącego kilka źródeł nie przypisujemy arbitralnie jednemu z nich: można go zachować tylko wtedy, gdy wszystkie jego źródła uległy awarii i nie powiela nowych dowodów.
+
+Błąd wszystkich źródeł, schematu lub przekroczenie limitu zatrzymuje publikację; ostatnia strona pozostaje bez zmian. Brak albo niepoprawność poprzedniego publicznego zestawu nie blokuje nowych odczytów. Plik snapshotu i katalog wynikowy są ignorowane przez Git. Nie publikujemy zrzutów baz ani obrazów usług.
 
 ## Przygotowanie lokalne
 
@@ -33,7 +39,7 @@ Katalog wynikowy: `web/.pages-build/out`. Skrypt kopiuje wyłącznie wskazane ko
 
 ## Publikacja
 
-Workflow `Public Pages` działa tylko na gałęzi `main` i po jawnym ustawieniu zmiennej repozytorium `PUBLIC_PAGES_ENABLED=true`. Ustawienia Pages muszą wskazywać GitHub Actions. Zmienna repozytorium `PUBLIC_SITE_URL` zawiera adres HTTPS zwrócony przez GitHub Pages; workflow przekazuje go jako `MONITOR_PUBLIC_SITE_URL` do danych Open Graph i adresu canonical. Sam push kodu bez włączonej zmiennej `PUBLIC_PAGES_ENABLED` niczego nie publikuje.
+Workflow `Public Pages` działa tylko na gałęzi `main` i po jawnym ustawieniu zmiennej repozytorium `PUBLIC_PAGES_ENABLED=true`. Ustawienia Pages muszą wskazywać GitHub Actions. Zmienna repozytorium `PUBLIC_SITE_URL` zawiera adres HTTPS zwrócony przez GitHub Pages; workflow przekazuje go jako `MONITOR_PUBLIC_SITE_URL` do danych Open Graph, adresu canonical i opcjonalnego odczytu poprzedniej publicznej publikacji. Sam push kodu bez włączonej zmiennej `PUBLIC_PAGES_ENABLED` niczego nie publikuje.
 
 Runner tworzy nowe losowe hasła, uruchamia testy i osobną bazę, pobiera publiczne źródła, buduje statyczny podgląd, a dopiero potem wysyła do Pages artefakt zawierający wyłącznie dozwolone pliki. Akcje są przypięte do pełnych SHA; uprawnienia do zapisu w Pages i wystawienia tokenu OIDC ma wyłącznie zadanie wdrożeniowe. Nie ma sekretów produkcyjnych ani połączenia z Makiem użytkownika.
 
@@ -46,6 +52,11 @@ Przegląd źródeł z 1.09.2026:
 - [USGS](https://www.usgs.gov/faqs/are-usgs-reportspublications-copyrighted): własne dane w domenie publicznej; zachowujemy pochodzenie sieci i nie publikujemy chronionych zdjęć/grafik partnerów.
 - [MeteoAlarm](https://feeds.meteoalarm.org/): CC BY 4.0, MeteoAlarm/EUMETNET i IMGW-PIB; zaznaczamy przetworzenie i link do licencji.
 - [CISA KEV](https://github.com/cisagov/kev-data/blob/develop/LICENSE): CC0 dla katalogu; zewnętrzne strony mają własne warunki. Nie używamy logo CISA/DHS ani nie sugerujemy poparcia.
+- [GDACS](https://www.gdacs.org/Documents/2025/GDACS_Terms_of_use_Mar_25.pdf): atrybucja Global Disaster Awareness and Coordination System, GDACS; modele nie zastępują krajowych ostrzeżeń i nie gwarantują kompletności. Nie kopiujemy cudzych obrazów i raportów.
+- [EASA](https://www.easa.europa.eu/en/copyright-disclaimer): reprodukcja z podaniem źródła, z wyjątkami materiałów zastrzeżonych; zachowujemy oryginalne odnośniki.
+- [NASA EONET](https://eonet.gsfc.nasa.gov/what-is-eonet): kuratorskie metadane z pochodzeniem źródeł; przybliżone dane informacyjne, bez publikowania obrazów ani sugerowania poparcia NASA.
+- [NOAA/NWS](https://www.weather.gov/disclaimer): własne informacje publiczne z zachowaną atrybucją; bez sugerowania oficjalnego poparcia.
+- [GitHub Status](https://www.githubstatus.com/api/v2) i [Cloudflare Status](https://www.cloudflarestatus.com/api): publiczne API. Publikujemy faktyczne metadane (nazwa, stan, wpływ, daty, nazwy komponentów i link), bez pełnych komunikatów, aktualizacji i postmortemów; nie przypisujemy im licencji CC. Obowiązują [warunki GitHub](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service#h-api-terms) i [Cloudflare](https://www.cloudflare.com/policies/terms/).
 - [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/): domena publiczna, mapa uproszczona.
 - `THIRD_PARTY_NOTICES.txt` zachowuje informacje o prawach i licencjach z zainstalowanych pakietów produkcyjnych i komponentów Next; MapLibre zachowuje również swój plik `LICENSE`.
 

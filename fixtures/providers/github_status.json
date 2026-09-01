@@ -1,0 +1,37 @@
+{
+  "_fixture_notice": "Synthetic schema fixture only; never a live incident.",
+  "page": {
+    "id": "githubfixture",
+    "name": "GitHub",
+    "url": "https://www.githubstatus.com"
+  },
+  "incidents": [
+    {
+      "id": "testgh000001",
+      "name": "Synthetic GitHub API availability test",
+      "status": "resolved",
+      "impact": "major",
+      "started_at": "2026-08-26T10:00:00+02:00",
+      "created_at": "2026-08-26T08:05:00Z",
+      "updated_at": "2026-08-26T10:00:00Z",
+      "resolved_at": "2026-08-26T09:00:00Z",
+      "shortlink": "https://stspg.io/testonly",
+      "components": [
+        {
+          "id": "testcomp0001",
+          "name": "API Requests",
+          "status": "operational",
+          "description": "TEST_ONLY_COMPONENT_PROSE"
+        }
+      ],
+      "incident_updates": [
+        {
+          "id": "testup000001",
+          "body": "TEST_ONLY_UPDATE_TEXT",
+          "status": "resolved"
+        }
+      ],
+      "postmortem_body": "TEST_ONLY_POSTMORTEM_TEXT"
+    }
+  ]
+}

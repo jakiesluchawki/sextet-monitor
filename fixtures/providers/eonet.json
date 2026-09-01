@@ -1,0 +1,124 @@
+{
+  "title": "EONET v3 synthetic parser fixtures",
+  "description": "Synthetic examples; never used as live events.",
+  "link": "https://eonet.gsfc.nasa.gov/api/v3/events",
+  "events": [
+    {
+      "id": "EONET_FIXTURE_FIRE",
+      "title": "Fixture wildfire",
+      "description": null,
+      "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_FIXTURE_FIRE",
+      "closed": null,
+      "categories": [
+        {
+          "id": "wildfires",
+          "title": "Wildfires"
+        }
+      ],
+      "sources": [
+        {
+          "id": "GDACS",
+          "url": "https://www.gdacs.org/report.aspx?eventtype=WF&eventid=9990001"
+        }
+      ],
+      "geometry": [
+        {
+          "magnitudeValue": 10,
+          "magnitudeUnit": "hectare",
+          "date": "2026-08-25T00:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            21,
+            52
+          ]
+        },
+        {
+          "magnitudeValue": 20,
+          "magnitudeUnit": "hectare",
+          "date": "2026-08-26T12:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            21.1,
+            52.1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EONET_FIXTURE_VOLCANO",
+      "title": "Fixture volcano",
+      "description": "Synthetic test of a curated area.",
+      "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_FIXTURE_VOLCANO",
+      "closed": "2026-08-26T00:00:00Z",
+      "categories": [
+        {
+          "id": "volcanoes",
+          "title": "Volcanoes"
+        }
+      ],
+      "sources": [
+        {
+          "id": "SIVolcano",
+          "url": "https://volcano.si.edu/"
+        }
+      ],
+      "geometry": [
+        {
+          "date": "2026-08-26T12:00:00Z",
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                20,
+                51
+              ],
+              [
+                21,
+                51
+              ],
+              [
+                21,
+                52
+              ],
+              [
+                20,
+                51
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EONET_FIXTURE_STORM",
+      "title": "Fixture storm",
+      "description": null,
+      "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_FIXTURE_STORM",
+      "closed": null,
+      "categories": [
+        {
+          "id": "severeStorms",
+          "title": "Severe Storms"
+        }
+      ],
+      "sources": [
+        {
+          "id": "NOAA_NHC",
+          "url": "https://www.nhc.noaa.gov/"
+        }
+      ],
+      "geometry": [
+        {
+          "magnitudeValue": 50,
+          "magnitudeUnit": "kts",
+          "date": "2026-08-26T18:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -65,
+            20
+          ]
+        }
+      ]
+    }
+  ]
+}

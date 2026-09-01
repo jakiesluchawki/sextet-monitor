@@ -100,6 +100,8 @@ input[type="checkbox"] { width: 15px; height: 15px; margin: 2px 0 0; accent-colo
 .view-summary h2 { font-size: 13px; font-weight: 600; }
 .view-summary p { color: var(--muted); font-size: 10.5px; margin-top: 3px; }
 .coverage-button { flex-shrink: 0; font-size: 10px; padding: 4px 6px; min-height: 28px; background: transparent; color: var(--muted); border-color: var(--line-soft); }
+.coverage-button small { display: block; font-size: inherit; margin-top: 2px; }
+.public-coverage-note { margin: 0; padding: 8px 14px; color: var(--muted); font-size: 10.5px; border-bottom: 1px solid var(--line-soft); }
 .coverage-button .state-dot { background: var(--subtle); }
 .coverage-button.all-fresh .state-dot { background: var(--success); }
 .coverage-button.has-gaps { color: var(--warning); }
@@ -161,6 +163,7 @@ input[type="checkbox"] { width: 15px; height: 15px; margin: 2px 0 0; accent-colo
 .category-aviation { background: #a7b2d9; }
 .category-cyber { background: #b3a1c9; }
 .category-internet { background: #8cbcac; }
+.category-space_weather { background: #c6a17e; }
 .event-location { font-size: 10px; color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }
 .event-location small { display: block; font-size: 9px; color: var(--subtle); margin-top: 4px; }
 .severity { display: inline-flex; width: fit-content; align-items: center; border: 1px solid var(--line); border-radius: 3px; padding: 2px 5px; color: var(--muted); font-size: 9px; line-height: 1.35; font-weight: 550; }
@@ -239,6 +242,10 @@ input[type="checkbox"] { width: 15px; height: 15px; margin: 2px 0 0; accent-colo
 .source-row > summary::-webkit-details-marker { display: none; }
 .source-row > summary:hover { background: var(--surface-raised); }
 .source-name { font-size: 12px; font-weight: 550; }
+.source-record-count { display: block; font-size: 9.5px; font-weight: 400; color: var(--muted); margin-top: 4px; }
+.source-inspect { margin-bottom: 12px; }
+.public-source-filter { grid-column: 1 / -1; }
+.public-source-context { overflow-wrap: anywhere; }
 .source-state { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; text-align: right; line-height: 1.5; flex-shrink: 0; }
 .tone-ok { color: var(--success); }
 .tone-ok .state-dot { background: var(--success); }

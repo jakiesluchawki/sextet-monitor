@@ -587,6 +587,8 @@ def expire_advisories(conn, now=None):
           OR (normal->>'source_id'='meteoalarm' AND
               ((lifecycle_status='unknown' AND valid_from <= :now AND valid_to > :now)
                OR (normal->'tags' ? 'hazard_onset_in_future' AND occurred_start <= :now)))
+          OR (normal->>'source_id'='noaa_swpc' AND normal->>'kind'='advisory'
+              AND lifecycle_status='unknown' AND valid_from <= :now AND valid_to > :now)
         FOR UPDATE
     """), {"now": now}).mappings())
     changed = 0
@@ -601,7 +603,7 @@ def expire_advisories(conn, now=None):
                      {"seen": row["last_seen_at"], "id": row["id"]})
         summary = ("Upłynął termin valid_to zadeklarowany przez źródło; to nie nowy odczyt."
                    if change == "expired" else
-                   "Nadszedł zapisany termin effective/onset CAP; przeliczono stan z zegara, bez nowego odczytu.")
+                   "Nadszedł zapisany termin ważności lub onset; przeliczono stan z zegara, bez nowego odczytu.")
         _revision(conn, row["id"], normal, now, change, summary)
         changed += 1
     return changed

@@ -36,6 +36,17 @@ def effective_event_state(normal: dict, now: datetime) -> dict:
                 status = "active"
             else:
                 status = "unknown"
+    elif result.get("source_id") == "noaa_swpc" and result.get("kind") == "advisory":
+        # A watch/warning is a dated forecast, not an observed local disruption.
+        # Derive only the declared validity; never revive a terminal record.
+        if status not in {"withdrawn", "expired"}:
+            start = _instant(result.get("valid_from"))
+            if end and end <= now:
+                status = "expired"
+            elif start and end and start <= now < end:
+                status = "active"
+            else:
+                status = "unknown"
     elif status in {"active", "unknown"} and end and end <= now:
         status = "expired"
     result["lifecycle_status"] = status

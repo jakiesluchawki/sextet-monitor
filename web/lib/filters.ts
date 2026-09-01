@@ -2,11 +2,11 @@ import type { Category, EventQuery, TimeBasis } from "./contracts";
 
 export const CATEGORY_LABELS: Record<Category, string> = {
   earthquake: "Trzęsienia ziemi", disaster: "Katastrofy", weather: "Pogoda",
-  aviation: "Lotnictwo", cyber: "Cyberbezpieczeństwo", internet: "Internet",
+  aviation: "Lotnictwo", cyber: "Cyberbezpieczeństwo", internet: "Internet", space_weather: "Pogoda kosmiczna",
 };
 export const CATEGORY_SHORT: Record<Category, string> = {
   earthquake: "Trzęsienie", disaster: "Katastrofa", weather: "Pogoda",
-  aviation: "Lotnictwo", cyber: "Cyber", internet: "Internet",
+  aviation: "Lotnictwo", cyber: "Cyber", internet: "Internet", space_weather: "Pogoda kosmiczna",
 };
 export const TIME_BASIS_LABELS: Record<TimeBasis, string> = {
   occurred: "Daty wystąpienia", changed: "Zmiany w monitorze", published: "Daty publikacji", validity: "Okresu ważności",

@@ -19,7 +19,7 @@ import FilterPanel from "../components/FilterPanel";
 import EventList from "../components/EventList";
 import { mappedCategories } from "../components/EventMap";
 import { assetPath } from "../lib/assets";
-import { changePublicQuery, filterPublicSnapshot, loadPublicSnapshot, MAX_SNAPSHOT_BYTES, PUBLIC_DEFAULT_QUERY, snapshotAge, validatePublicSnapshot, type PublicSnapshot } from "../lib/public-snapshot";
+import { changePublicFilters, changePublicQuery, filterPublicSnapshot, loadPublicSnapshot, MAX_SNAPSHOT_BYTES, publicSourceCoverage, PUBLIC_DEFAULT_QUERY, PUBLIC_SOURCE_IDS, PUBLIC_SOURCE_INFO, PUBLIC_TIME_BASIS, selectPublicSource, snapshotAge, validatePublicSnapshot, type PublicSnapshot } from "../lib/public-snapshot";
 
 function eventFixture(overrides:Partial<EventSummary>={}):EventSummary {
   return {
@@ -358,10 +358,12 @@ test("a catalog snapshot timestamp is not rendered with the vulnerability public
 function publicFixture(overrides:Partial<EventDetail>={}):PublicSnapshot {
   const detail:EventDetail={...eventFixture({id:"11111111-1111-5111-8111-111111111111",source_ids:["usgs"],...overrides}),
     evidence:[{id:"22222222-2222-5222-8222-222222222222",source_id:"usgs",source_name:"USGS fixture",provider_record_id:"test-only",source_url:"https://example.invalid/record",retrieved_at:"2026-08-27T11:00:00Z",issued_at:null,source_updated_at:null,origins:["USGS"],payload_hash:"test-only",raw:null,raw_retained:false,attribution:"Fixture, not published",license_url:null}],revisions:[],relations:[],...overrides};
-  return {format:1,version:"test-only",generated_at:"2026-08-27T12:00:00Z",events:[detail],sources:[sourceFixture({id:"usgs",status:"ok",last_success_at:"2026-08-27T11:00:00Z"})],limitations:["Fixture, not published"]};
+  return {format:1,version:"test-only",generated_at:"2026-08-27T12:00:00Z",events:[detail],sources:[sourceFixture({id:"usgs",status:"ok",record_count:1,last_success_at:"2026-08-27T11:00:00Z"})],limitations:["Fixture, not published"]};
 }
 test("public manifest accepts only explicit public sources and excludes raw payloads and private history",()=>{
   assert.equal(validatePublicSnapshot(publicFixture()).events.length,1);
+  const collection=publicFixture({geometry:{type:"GeometryCollection",geometries:[{type:"Point",coordinates:[21,52]}]}});
+  assert.equal(validatePublicSnapshot(collection).events[0].geometry?.type,"GeometryCollection");
   const mutations:Array<(value:PublicSnapshot)=>void>=[
     (value)=>{value.format=2 as 1;},
     (value)=>{value.sources[0].id="cloudflare_radar";},
@@ -375,6 +377,9 @@ test("public manifest accepts only explicit public sources and excludes raw payl
     (value)=>{value.events[0].relations=[{event_id:"outside",title:"Outside",relation_type:"same_event",reason:"Test",distance_km:null,time_delta_hours:null}];},
     (value)=>{value.events[0].geometry={type:"Point",coordinates:[181,52]};},
     (value)=>{value.events[0].geometry={type:"GeometryCollection",geometries:[]};},
+    (value)=>{value.events[0].geometry=Object.assign({type:"Point" as const,coordinates:[21,52]},{raw:{private:"payload"}});},
+    (value)=>{value.events[0].geometry=Object.assign({type:"GeometryCollection" as const,geometries:[{type:"Point" as const,coordinates:[21,52]}]},{raw:{private:"payload"}});},
+    (value)=>{value.events[0].geometry={type:"GeometryCollection",geometries:[Object.assign({type:"Point" as const,coordinates:[21,52]},{private_field:"payload"})]};},
   ];
   for(const mutate of mutations){const fixture=publicFixture();mutate(fixture);assert.throws(()=>validatePublicSnapshot(fixture),/Nieprawidłowy zestaw/);}
   assert.throws(()=>validatePublicSnapshot({...publicFixture(),private_history:[]}),/pola manifestu/);
@@ -455,7 +460,7 @@ test("snapshot fetch is same-origin JSON only, credentialless and bounded before
 test("public shared components omit unavailable controls, local history and worker promises",()=>{
   const snapshot=publicFixture();
   const filters=renderToStaticMarkup(React.createElement(FilterPanel,{query:PUBLIC_DEFAULT_QUERY,onChange:()=>undefined,onReset:()=>undefined,snapshot:{generatedAt:snapshot.generated_at,countries:["PL"]}}));
-  assert.doesNotMatch(filters,/Filtr promienia|id="region"|value="changed"|value="aviation"/);
+  assert.doesNotMatch(filters,/Filtr promienia|id="region"|value="changed"/);
   assert.match(filters,/Koniec zestawu/);assert.match(filters,/27.08.2026/);
   const detail=renderToStaticMarkup(React.createElement(EventEvidence,{detail:snapshot.events[0],publicMode:true,readAt:snapshot.generated_at,selected:true,loading:false,error:null,outsideFilter:false,onSelect:()=>undefined,onRetry:()=>undefined}));
   assert.doesNotMatch(detail,/Surowy rekord źródłowy|Historia zmian|Import początkowy|Ostatnia zmiana w monitorze/);
@@ -477,4 +482,167 @@ test("public schema rejects unpublished extra fields on sources, events, evidenc
     target.private_field="must never be included in the public artifact";
     assert.throws(()=>validatePublicSnapshot(snapshot),/nieoczekiwane pola/);
   }
+});
+
+
+function nineSourceFixture():PublicSnapshot {
+  const snapshot=publicFixture();
+  const template=snapshot.events[0];
+  snapshot.sources=PUBLIC_SOURCE_IDS.map((id)=>sourceFixture({id,name:PUBLIC_SOURCE_INFO[id].name,status:"ok",record_count:1,last_attempt_at:"2026-08-27T11:00:00Z",last_success_at:"2026-08-27T11:00:00Z"}));
+  snapshot.events=PUBLIC_SOURCE_IDS.map((id,index)=>({
+    ...structuredClone(template),id:`0000000${index+1}-1111-5111-8111-111111111111`,category:PUBLIC_SOURCE_INFO[id].categories[0],source_ids:[id],
+    issued_at:"2026-08-27T10:00:00Z",valid_from:"2026-08-27T10:00:00Z",
+    evidence:[{...structuredClone(template.evidence[0]),source_id:id,source_name:PUBLIC_SOURCE_INFO[id].name,origins:[`fixture:${id}`]}],
+  }));
+  return snapshot;
+}
+
+test("the public schema admits all nine approved feeds, seven categories and honest failed-source metadata",()=>{
+  const snapshot=nineSourceFixture();
+  const failed=snapshot.sources.find((source)=>source.id==="noaa_swpc")!;
+  failed.status="error";failed.error="Latest fetch failed; retaining the earlier public reading.";
+  failed.last_success_at="2026-08-26T11:00:00Z";
+  const retained=snapshot.events.find((event)=>event.source_ids.includes(failed.id))!;
+  retained.tags.push("cached_public_data");retained.evidence[0].retrieved_at=failed.last_success_at;
+  const parsed=validatePublicSnapshot(snapshot);
+  assert.equal(parsed.sources.length,9);
+  assert.equal(new Set(parsed.events.map((event)=>event.category)).size,7);
+  assert.equal(parsed.sources.find((source)=>source.id===failed.id)?.status,"error");
+  assert.equal(parsed.events.find((event)=>event.id===retained.id)?.evidence[0].retrieved_at,"2026-08-26T11:00:00Z");
+  // A failed source without a prior public reading is still represented, with no invented record.
+  const missing=snapshot.sources.find((source)=>source.id==="cloudflare_status")!;
+  missing.status="error";missing.error="No public data available.";missing.last_success_at=null;missing.record_count=0;
+  snapshot.events=snapshot.events.filter((event)=>!event.source_ids.includes(missing.id));
+  assert.equal(validatePublicSnapshot(snapshot).sources.find((source)=>source.id===missing.id)?.record_count,0);
+  snapshot.sources.push(sourceFixture({id:"cloudflare_radar"}));
+  assert.throws(()=>validatePublicSnapshot(snapshot),/Nieprawidłowy zestaw/);
+});
+
+test("public source selection chooses a source time basis without leaking source state into private queries",()=>{
+  const query={...PUBLIC_DEFAULT_QUERY,country:"PL",severity_min:2,since:"2026-08-26T06:00:00Z",until:"2026-08-27T06:00:00Z"};
+  const expected={usgs:"occurred",meteoalarm:"validity",cisa_kev:"published",gdacs:"occurred",easa_czib:"validity",nasa_eonet:"occurred",noaa_swpc:"published",github_status:"published",cloudflare_status:"published"};
+  for(const id of PUBLIC_SOURCE_IDS){
+    const selected=selectPublicSource({query},id);
+    assert.equal(selected.sourceId,id);
+    assert.equal(selected.query.time_basis,expected[id]);
+    assert.equal(selected.query.since,query.since);assert.equal(selected.query.until,query.until);
+    assert.equal(selected.query.country,"PL");assert.equal(selected.query.severity_min,2);
+    assert.equal(Object.hasOwn(selected.query,"sourceId"),false);
+    const params=new URLSearchParams(serializeQuery(selected.query));
+    for(const key of ["source","source_id","sourceId"])assert.equal(params.has(key),false);
+  }
+  assert.throws(()=>selectPublicSource({query},"cloudflare_radar"),/spoza publicznego/);
+  for(const [category,basis] of Object.entries(PUBLIC_TIME_BASIS)){
+    assert.equal(changePublicQuery(query,{category:category as EventSummary["category"]}).time_basis,basis);
+  }
+});
+
+test("a category change cannot silently keep an incompatible public source and GDACS retains both categories",()=>{
+  const initial={query:{...PUBLIC_DEFAULT_QUERY,since:"2026-08-26T06:00:00Z",until:"2026-08-27T06:00:00Z"}};
+  const gdacs=selectPublicSource(initial,"gdacs");
+  assert.equal(gdacs.query.category,undefined);
+  for(const category of ["earthquake","disaster"] as const){
+    const next=changePublicFilters(gdacs,{category});
+    assert.equal(next.sourceId,"gdacs");assert.equal(next.query.time_basis,"occurred");
+    assert.equal(next.query.until,initial.query.until);
+  }
+  const weather=changePublicFilters(gdacs,{category:"weather"});
+  assert.equal(weather.sourceId,undefined);assert.equal(weather.query.time_basis,"validity");
+  assert.equal(weather.query.since,initial.query.since);
+  const github=selectPublicSource(initial,"github_status");
+  assert.equal(changePublicFilters(github,{category:undefined}).sourceId,undefined);
+  const manual=changePublicFilters(github,{time_basis:"occurred"});
+  assert.equal(manual.sourceId,"github_status");assert.equal(manual.query.until,initial.query.until);
+  assert.equal(selectPublicSource(github).sourceId,undefined);
+  assert.deepEqual(selectPublicSource(github).query,github.query);
+});
+
+test("source predicates feed one bounded list, timeline and map without fabricating locations or source independence",()=>{
+  const snapshot=nineSourceFixture();
+  const gdacs=snapshot.events.find((event)=>event.source_ids.includes("gdacs"))!;
+  gdacs.geometry={type:"Point",coordinates:[21,52]};gdacs.severity=3;gdacs.countries=["PL"];
+  snapshot.events.push({...structuredClone(gdacs),id:"aaaaaaaa-1111-5111-8111-111111111111",category:"disaster",geometry:null,severity:1});
+  const selected=selectPublicSource({query:{...PUBLIC_DEFAULT_QUERY}},"gdacs");
+  const all=filterPublicSnapshot(snapshot,selected.query,selected.sourceId);
+  assert.deepEqual(new Set(all.items.map((event)=>event.category)),new Set(["earthquake","disaster"]));
+  assert.equal(all.total,2);assert.equal(all.mapped,1);assert.equal(all.unlocated,1);
+  const bounded=filterPublicSnapshot(snapshot,{...selected.query,limit:1},selected.sourceId);
+  assert.equal(bounded.total,2);assert.equal(bounded.shown,1);assert.equal(bounded.truncated,true);
+  assert.equal(bounded.items[0].id,gdacs.id);
+  assert.equal(eventsToGeoJson(bounded.items).points.features.length,bounded.mapped);
+  assert.equal(filterPublicSnapshot(snapshot,{...selected.query,country:"TR"},selected.sourceId).total,0);
+  assert.equal(filterPublicSnapshot(snapshot,{...selected.query,min_sources:2},selected.sourceId).total,0);
+  const noaa=selectPublicSource({query:{...PUBLIC_DEFAULT_QUERY}},"noaa_swpc");
+  snapshot.events.find((event)=>event.source_ids.includes("noaa_swpc"))!.occurred_start=null;
+  const noaaResult=filterPublicSnapshot(snapshot,noaa.query,noaa.sourceId);
+  assert.equal(noaaResult.total,1);assert.equal(noaaResult.mapped,0);assert.equal(noaaResult.unlocated,1);
+  assert.deepEqual(mappedCategories(noaaResult.items),[]);
+  assert.throws(()=>filterPublicSnapshot(snapshot,selected.query,"cloudflare_radar"),/Brak metadanych/);
+});
+
+test("public health counts only enabled nonempty successful feeds and exposes missing, cached, empty and failed coverage",()=>{
+  const snapshot=nineSourceFixture();
+  const source=(id:string)=>snapshot.sources.find((item)=>item.id===id)!;
+  source("usgs").record_count=20; // Provider count is not the count in the public artifact.
+  source("meteoalarm").status="ok_empty";source("meteoalarm").record_count=0;
+  source("cisa_kev").status="error";
+  snapshot.events.find((event)=>event.source_ids.includes("cisa_kev"))!.tags.push("cached_public_data");
+  source("gdacs").status="partial";
+  source("easa_czib").status="pending";source("easa_czib").last_success_at=null;source("easa_czib").record_count=0;
+  source("nasa_eonet").status="stale";
+  source("noaa_swpc").last_success_at=null;
+  source("github_status").enabled=false;source("github_status").status="disabled";
+  snapshot.sources=snapshot.sources.filter((item)=>item.id!=="cloudflare_status");
+  snapshot.events=snapshot.events.filter((event)=>!["meteoalarm","easa_czib","cloudflare_status"].includes(event.source_ids[0]));
+  const overview=publicSourceCoverage(snapshot);
+  assert.equal(overview.expected,9);assert.equal(overview.present,8);
+  assert.equal(overview.healthy,1);assert.equal(overview.empty,1);assert.equal(overview.incomplete.length,7);
+  assert.deepEqual(overview.missing.map((item)=>item.id),["cloudflare_status"]);
+  assert.equal(overview.entries.find((item)=>item.id==="usgs")?.records,1);
+  assert.equal(overview.entries.find((item)=>item.id==="cisa_kev")?.cached,1);
+  assert.equal(overview.entries.find((item)=>item.id==="meteoalarm")?.tone,"muted");
+  for(const item of overview.entries.filter((item)=>item.id!=="usgs"))assert.equal(item.healthy,false);
+  const legacy=publicSourceCoverage(publicFixture());
+  assert.equal(legacy.missing.length,8);assert.equal(legacy.healthy,1);
+});
+
+test("a new snapshot cannot make cached evidence current or replace its event time with a fetch time",()=>{
+  const snapshot=publicFixture({tags:["cached_public_data"],occurred_start:null,issued_at:"2026-08-27T10:00:00Z"});
+  snapshot.generated_at="2026-08-29T12:00:00Z";
+  snapshot.sources[0].status="error";snapshot.sources[0].last_attempt_at=snapshot.generated_at;
+  snapshot.sources[0].error="Source did not answer; earlier public data retained.";
+  const retained=validatePublicSnapshot(snapshot).events[0];
+  const query={...PUBLIC_DEFAULT_QUERY,time_basis:"published" as const};
+  assert.equal(filterPublicSnapshot(snapshot,query,"usgs").total,0);
+  const history=filterPublicSnapshot(snapshot,{...query,window_hours:168},"usgs");
+  assert.equal(history.total,1);assert.equal(history.items[0].occurred_start,null);
+  assert.match(history.limitations!.join(" "),/poprzedniego publicznego odczytu/);
+  assert.equal(retained.evidence[0].retrieved_at,"2026-08-27T11:00:00Z");
+  const markup=renderToStaticMarkup(React.createElement(EventEvidence,{detail:retained,publicMode:true,readAt:snapshot.generated_at,selected:true,loading:false,error:null,outsideFilter:false,onSelect:()=>undefined,onRetry:()=>undefined}));
+  assert.match(markup,/Poprzedni publiczny odczyt; źródło nie odpowiedziało/);
+  assert.match(markup,/Daty dowodów nie są bieżące/);
+  assert.match(markup,/27.08.2026, 13:00/);assert.match(markup,/29.08.2026, 14:00/);
+  const coverage=publicSourceCoverage(snapshot);
+  const sources=renderToStaticMarkup(React.createElement(SourcePanel,{sources:snapshot.sources,snapshotAt:snapshot.generated_at,publicCoverage:coverage,loading:false,error:null,onRetry:()=>undefined,onSelectSource:()=>undefined}));
+  assert.match(sources,/1 rekordów w zestawie.*1 z poprzedniego odczytu/);
+  assert.match(sources,/tone-error/);assert.doesNotMatch(sources,/tone-ok/);
+  assert.match(sources,/Pokaż rekordy źródła/);
+});
+
+test("source selection is a labelled public-only control, all categories are reachable, and the source panel is discoverable",()=>{
+  const snapshot=nineSourceFixture(),overview=publicSourceCoverage(snapshot);
+  const sourceFilter={value:"gdacs",options:overview.entries.map((item)=>({id:item.id,name:item.name,label:item.label,records:item.records,available:Boolean(item.source)})),onChange:()=>undefined,onShowSources:()=>undefined};
+  const props={query:PUBLIC_DEFAULT_QUERY,onChange:()=>undefined,onReset:()=>undefined};
+  const markup=renderToStaticMarkup(React.createElement(FilterPanel,{...props,snapshot:{generatedAt:snapshot.generated_at,countries:["PL"],sourceFilter}}));
+  assert.match(markup,/label for="public-source">Źródło danych/);
+  assert.match(markup,/aria-describedby="public-source-help"/);
+  assert.match(markup,/Stan i pokrycie źródeł/);
+  for(const id of PUBLIC_SOURCE_IDS)assert.ok(markup.includes(`value="${id}"`));
+  for(const category of Object.keys(PUBLIC_TIME_BASIS))assert.ok(markup.includes(`value="${category}"`));
+  assert.doesNotMatch(markup,/class="reset-filters" disabled/);
+  const privateMarkup=renderToStaticMarkup(React.createElement(FilterPanel,props));
+  assert.doesNotMatch(privateMarkup,/public-source|Źródło danych/);
+  const shell=renderToStaticMarkup(React.createElement(PublicMonitor));
+  assert.match(shell,/aria-controls="public-details-panel">Źródła/);
+  assert.match(shell,/GitHub i Cloudflare/);
 });

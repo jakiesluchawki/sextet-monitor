@@ -29,7 +29,7 @@ MAX_QUERY_BYTES = 8 * 1024
 ALLOWED_ORIGINS = frozenset({"http://localhost:3180", "http://127.0.0.1:3180"})
 ALLOWED_HOSTS = frozenset({"localhost", "127.0.0.1", "api"})
 READ_TRANSACTION = "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY"
-Category = Literal["earthquake", "disaster", "weather", "aviation", "cyber", "internet"]
+Category = Literal["earthquake", "disaster", "weather", "aviation", "cyber", "internet", "space_weather"]
 Lifecycle = Literal["active", "expired", "withdrawn", "unknown"]
 SourceState = Literal["pending", "ok", "ok_empty", "partial", "error", "stale", "needs_credentials", "disabled"]
 

@@ -6,7 +6,11 @@ import { Icon } from "./Icon";
 
 const COUNTRY_OPTIONS = ["PL","TR","UA","DE","CZ","SK","LT","LV","EE","BY","RU","FI","SE","NO","DK","GB","IE","FR","ES","PT","IT","AT","CH","HU","RO","BG","GR","CY","HR","SI","RS","BA","AL","ME","MK","MD","GE","AM","AZ","IS","US","CA","MX","BR","AR","CL","CO","IL","PS","IR","IQ","SY","LB","JO","SA","AE","YE","AF","PK","IN","BD","CN","TW","JP","KR","KP","TH","VN","MY","ID","PH","AU","NZ","EG","LY","TN","DZ","MA","SD","ET","KE","ZA","NG","CD"];
 const WINDOWS = [6,12,24,48,168];
-export default function FilterPanel({query,onChange,onReset,snapshot}:{query:EventQuery;onChange:(patch:Partial<EventQuery>)=>void;onReset:()=>void;snapshot?:{generatedAt:string;countries:string[]}}) {
+interface SnapshotFilters {
+  generatedAt:string;countries:string[];
+  sourceFilter?:{value:string;options:Array<{id:string;name:string;label:string;records:number;available:boolean}>;onChange:(id:string)=>void;onShowSources:()=>void};
+}
+export default function FilterPanel({query,onChange,onReset,snapshot}:{query:EventQuery;onChange:(patch:Partial<EventQuery>)=>void;onReset:()=>void;snapshot?:SnapshotFilters}) {
   const [expanded,setExpanded]=useState(true);
   const [timePosition,setTimePosition]=useState<{hours:number;until?:string}>({hours:0});
   const hoursBack = !query.since && !query.until ? 0 : query.until === timePosition.until && query.until ? timePosition.hours : null;
@@ -23,6 +27,15 @@ export default function FilterPanel({query,onChange,onReset,snapshot}:{query:Eve
   return <details className="filter-panel" open={expanded} onToggle={(event)=>setExpanded(event.currentTarget.open)}>
     <summary><span><Icon name="filter"/>Filtry</span><span className="mobile-hint">Rozwiń / zwiń</span></summary>
     <div className="filter-content">
+      {snapshot?.sourceFilter && <fieldset className="public-source-filter"><legend>Źródła publiczne</legend>
+        <label htmlFor="public-source">Źródło danych</label>
+        <select id="public-source" value={snapshot.sourceFilter.value} aria-describedby="public-source-help" onChange={(event)=>snapshot.sourceFilter?.onChange(event.target.value)}>
+          <option value="">Wszystkie źródła</option>
+          {snapshot.sourceFilter.options.map((source)=><option key={source.id} value={source.id} disabled={!source.available}>{source.name} · {source.records} · {source.label}</option>)}
+        </select>
+        <p className="field-help" id="public-source-help">Liczby dotyczą całego zestawu. Wybór dobiera kategorię i datę, zachowuje czas, kraj i wagę.</p>
+        <button type="button" className="text-button" onClick={snapshot.sourceFilter.onShowSources}>Stan i pokrycie źródeł</button>
+      </fieldset>}
       <fieldset><legend>Czas</legend>
         <label htmlFor="window">Zakres</label>
         <select id="window" value={query.window_hours} onChange={(event)=>onChange({window_hours:Number(event.target.value)})}>
@@ -65,7 +78,7 @@ export default function FilterPanel({query,onChange,onReset,snapshot}:{query:Eve
       </fieldset>
       <fieldset><legend>Treść i dowody</legend>
         <label htmlFor="category">Kategoria</label><select id="category" value={query.category || ""} onChange={(event)=>onChange({category:(event.target.value || undefined) as Category | undefined})}>
-          <option value="">Wszystkie kategorie</option>{Object.entries(CATEGORY_LABELS).filter(([value])=>!snapshot || ["earthquake","weather","cyber"].includes(value)).map(([value,label])=><option key={value} value={value}>{label}</option>)}
+          <option value="">Wszystkie kategorie</option>{Object.entries(CATEGORY_LABELS).map(([value,label])=><option key={value} value={value}>{label}</option>)}
         </select>
         <label htmlFor="severity">Minimalna waga</label><select id="severity" value={query.severity_min} onChange={(event)=>onChange({severity_min:Number(event.target.value)})}>
           <option value="0">Wszystkie, także nieokreślone</option>{SEVERITY_LABELS.slice(1).map((label,index)=><option key={label} value={index+1}>{label} i wyższa</option>)}
@@ -74,7 +87,7 @@ export default function FilterPanel({query,onChange,onReset,snapshot}:{query:Eve
         {!snapshot && <label className="check-label"><input type="checkbox" checked={query.min_sources >= 2} onChange={(event)=>onChange({min_sources:event.target.checked ? 2 : 1})}/><span>Min. {Math.max(2,query.min_sources)} niezależne źródła</span></label>}
         <label className="check-label"><input type="checkbox" checked={query.include_inactive} onChange={(event)=>onChange({include_inactive:event.target.checked})}/><span>Także wygasłe i odwołane</span></label>
       </fieldset>
-      <button className="reset-filters" disabled={serializeQuery(query)===serializeQuery(snapshot ? {...DEFAULT_QUERY,include_inactive:true} : DEFAULT_QUERY)} onClick={onReset}>Wyczyść filtry</button>
+      <button className="reset-filters" disabled={!snapshot?.sourceFilter?.value && serializeQuery(query)===serializeQuery(snapshot ? {...DEFAULT_QUERY,include_inactive:true} : DEFAULT_QUERY)} onClick={onReset}>Wyczyść filtry</button>
     </div>
   </details>;
 }

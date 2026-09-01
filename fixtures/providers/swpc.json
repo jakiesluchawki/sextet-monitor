@@ -1,0 +1,22 @@
+[
+  {
+    "product_id": "K05A",
+    "issue_datetime": "2026-08-26 18:15:03.120",
+    "message": "Space Weather Message Code: ALTK05\r\nSerial Number: 7001\r\nIssue Time: 2026 Aug 26 1815 UTC\r\n\r\nALERT: Geomagnetic K-index of 5\r\nThreshold Reached: 2026 Aug 26 1814 UTC\r\nNOAA Scale: G1 - Minor\r\nPotential Impacts: Possible effects on navigation at high latitudes. Synthetic parser fixture, not a current alert."
+  },
+  {
+    "product_id": "K05W",
+    "issue_datetime": "2026-08-26 19:10:21.003",
+    "message": "Space Weather Message Code: WARK05\r\nSerial Number: 8001\r\nIssue Time: 2026 Aug 26 1910 UTC\r\n\r\nWARNING: Geomagnetic K-index of 5 expected\r\nValid From: 2026 Aug 26 1900 UTC\r\nValid To: 2026 Aug 26 2300 UTC\r\nNOAA Scale: G1 - Minor\r\nSynthetic parser fixture, not a current warning."
+  },
+  {
+    "product_id": "A30F",
+    "issue_datetime": "2026-08-26 16:30:00.000",
+    "message": "Space Weather Message Code: WATA30\r\nSerial Number: 9001\r\nIssue Time: 2026 Aug 26 1630 UTC\r\n\r\nWATCH: Geomagnetic Storm Category G2 Predicted\r\nHighest Storm Level Predicted by Day:\r\nAug 27: G1 (Minor)   Aug 28: G2 (Moderate)\r\nTHIS SUPERSEDES ANY/ALL PRIOR WATCHES IN EFFECT\r\nSynthetic parser fixture. Forecast table is not an exact UTC validity interval."
+  },
+  {
+    "product_id": "BHIS",
+    "issue_datetime": "2026-08-26 06:45:08.377",
+    "message": "Space Weather Message Code: SUM10R\r\nSerial Number: 6001\r\nIssue Time: 2026 Aug 26 0645 UTC\r\n\r\nSUMMARY: 10cm Radio Burst\r\nBegin Time: 2026 Aug 26 0631 UTC\r\nMaximum Time: 2026 Aug 26 0632 UTC\r\nEnd Time: 2026 Aug 26 0632 UTC\r\nPeak Flux: 140 sfu\r\nSynthetic parser fixture."
+  }
+]

@@ -44,6 +44,20 @@ export function sourceTone(state: SourceState): string {
   if (state === "stale" || state === "partial" || state === "needs_credentials") return "warning";
   return "muted";
 }
+/** Public health describes the saved fetch, not current availability or absence of hazards. */
+export function publicSourceHealth(source:SourceStatus|null,records:number) {
+  const healthy=Boolean(source?.enabled && source.status==="ok" && source.last_success_at && source.record_count>0 && records>0);
+  const empty=Boolean(source?.enabled && source.last_success_at && records===0 && (source.status==="ok" || source.status==="ok_empty"));
+  let label="Brak metadanych",tone="warning";
+  if(source){
+    label=STATE_LABELS[source.status];tone=sourceTone(source.status);
+    if(!source.enabled || source.status==="disabled"){label="Wyłączone";tone="muted";}
+    else if(healthy){label="Udany odczyt";tone="ok";}
+    else if(empty){label="Odczyt bez rekordów";tone="muted";}
+    else if(source.status==="ok" || source.status==="ok_empty"){label="Odczyt niepotwierdzony";tone="warning";}
+  }
+  return {healthy,empty,label,tone};
+}
 export function coverageWarnings(sources: SourceStatus[]): SourceStatus[] {
   return sources.filter((source) => source.enabled && source.status !== "ok" && source.status !== "ok_empty");
 }

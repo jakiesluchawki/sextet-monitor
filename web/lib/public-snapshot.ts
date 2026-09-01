@@ -1,16 +1,31 @@
 import type { Geometry } from "geojson";
-import type { EventDetail, EventQuery, EventsResponse, SourceStatus } from "./contracts";
+import type { Category, EventDetail, EventQuery, EventsResponse, SourceStatus, TimeBasis } from "./contracts";
 import { assetPath } from "./assets";
 import { changeQuery, DEFAULT_QUERY } from "./filters";
-import { eventTime, safeHttpUrl } from "./format";
+import { eventTime, publicSourceHealth, safeHttpUrl } from "./format";
 
 export const MAX_SNAPSHOT_BYTES=16*1024*1024;
-export const PUBLIC_SOURCE_IDS=["usgs","meteoalarm","cisa_kev"] as const;
+export const PUBLIC_SOURCE_IDS=["usgs","meteoalarm","cisa_kev","gdacs","easa_czib","nasa_eonet","noaa_swpc","github_status","cloudflare_status"] as const;
+export type PublicSourceId=typeof PUBLIC_SOURCE_IDS[number];
+export const PUBLIC_SOURCE_INFO:Record<PublicSourceId,{name:string;categories:readonly Category[]}>={
+  usgs:{name:"USGS",categories:["earthquake"]},
+  meteoalarm:{name:"MeteoAlarm / IMGW",categories:["weather"]},
+  cisa_kev:{name:"CISA KEV",categories:["cyber"]},
+  gdacs:{name:"GDACS",categories:["earthquake","disaster"]},
+  easa_czib:{name:"EASA CZIB",categories:["aviation"]},
+  nasa_eonet:{name:"NASA EONET",categories:["disaster"]},
+  noaa_swpc:{name:"NOAA SWPC",categories:["space_weather"]},
+  github_status:{name:"GitHub Status",categories:["internet"]},
+  cloudflare_status:{name:"Cloudflare Status",categories:["internet"]},
+};
+export const PUBLIC_TIME_BASIS:Record<Category,Exclude<TimeBasis,"changed">>={earthquake:"occurred",disaster:"occurred",weather:"validity",aviation:"validity",cyber:"published",internet:"published",space_weather:"published"};
+/** Source selection is local to Pages and is never serialized into the private API query. */
+export interface PublicFilterState {query:EventQuery;sourceId?:PublicSourceId}
 export const PUBLIC_DEFAULT_QUERY:EventQuery={...DEFAULT_QUERY,include_inactive:true};
 export interface PublicSnapshot {format:1;version:string;generated_at:string;sources:SourceStatus[];events:EventDetail[];limitations:string[]}
 const sourceIds=new Set<string>(PUBLIC_SOURCE_IDS);
 const sourceStates=new Set(["pending","ok","ok_empty","partial","error","stale","disabled"]);
-const categories=new Set(["earthquake","weather","cyber"]);
+const categories=new Set(Object.keys(PUBLIC_TIME_BASIS));
 const lifecycleStates=new Set(["active","expired","withdrawn","unknown"]);
 const iso=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 const PUBLIC_FIELDS={
@@ -46,6 +61,8 @@ function requireValue(condition:unknown,message:string):asserts condition {
 function validGeometry(value:unknown,budget:{positions:number},depth=0):value is Geometry|null {
   if(value===null)return true;
   if(!isObject(value) || depth>8)return false;
+  const allowed=value.type==="GeometryCollection" ? ["type","geometries"] : ["type","coordinates"];
+  if(Object.keys(value).some((key)=>!allowed.includes(key)))return false;
   const position=(part:unknown):boolean=>{
     budget.positions+=1;
     return budget.positions<=1_000_000 && Array.isArray(part) && part.length>=2 && part.length<=3
@@ -64,7 +81,7 @@ export function validatePublicSnapshot(value:unknown,nowMs=Date.now()):PublicSna
   requireValue(string(value.version,120) && value.version.length>0,"brak wersji.");
   requireValue(timestamp(value.generated_at,false) && Date.parse(value.generated_at as string)<=nowMs+300_000,"niepoprawny lub przyszły czas przygotowania.");
   requireValue(strings(value.limitations,100),"niepoprawne ograniczenia.");
-  requireValue(Array.isArray(value.sources) && value.sources.length>0 && value.sources.length<=3,"niepoprawna lista źródeł.");
+  requireValue(Array.isArray(value.sources) && value.sources.length>0 && value.sources.length<=PUBLIC_SOURCE_IDS.length,"niepoprawna lista źródeł.");
   const includedSources=new Set<string>();
   for(const item of value.sources){
     requireValue(isObject(item) && typeof item.id==="string" && sourceIds.has(item.id) && !includedSources.has(item.id),"źródło spoza zatwierdzonej listy lub duplikat.");
@@ -86,7 +103,7 @@ export function validatePublicSnapshot(value:unknown,nowMs=Date.now()):PublicSna
     for(const key of ["occurred_start","occurred_end","issued_at","source_updated_at","valid_from","valid_to","last_changed_at"])requireValue(timestamp(item[key]),"niepoprawna data rekordu.");
     for(const key of ["first_seen_at","last_seen_at"])requireValue(timestamp(item[key],false),"brak czasu przygotowania rekordu.");
     requireValue(strings(item.countries,250) && item.countries.every((code)=>/^[A-Z]{2}$/.test(code)) && strings(item.tags) && validGeometry(item.geometry,budget),"niepoprawna geometria, kraj lub tagi.");
-    requireValue(strings(item.source_ids,3) && item.source_ids.length>0 && item.source_ids.every((id)=>includedSources.has(id)) && new Set(item.source_ids).size===item.source_ids.length && item.source_count===item.source_ids.length && integer(item.independent_source_count,0,10) && publicUrl(item.source_url),"niepoprawne pochodzenie rekordu.");
+    requireValue(strings(item.source_ids,PUBLIC_SOURCE_IDS.length) && item.source_ids.length>0 && item.source_ids.every((id)=>includedSources.has(id)) && new Set(item.source_ids).size===item.source_ids.length && item.source_count===item.source_ids.length && integer(item.independent_source_count,0,10) && publicUrl(item.source_url),"niepoprawne pochodzenie rekordu.");
     requireValue(Array.isArray(item.revisions) && item.revisions.length===0,"historia prywatnego monitora nie jest częścią zestawu.");
     requireValue(Array.isArray(item.evidence) && item.evidence.length>0 && item.evidence.length<=20,"brak lub nadmiar dowodów.");
     for(const evidence of item.evidence){
@@ -151,19 +168,55 @@ export function snapshotAge(generatedAt:string,nowMs:number):string {
 
 export function changePublicQuery(query:EventQuery,patch:Partial<EventQuery>):EventQuery {
   const next=changeQuery(query,patch);
-  if(patch.category==="cyber")next.time_basis="published";
-  if(patch.category==="weather")next.time_basis="validity";
-  if(patch.category==="earthquake")next.time_basis="occurred";
+  if(patch.category)next.time_basis=PUBLIC_TIME_BASIS[patch.category];
   return next;
 }
 
+export function changePublicFilters(current:PublicFilterState,patch:Partial<EventQuery>):PublicFilterState {
+  const query=changePublicQuery(current.query,patch);
+  const incompatible="category" in patch && current.sourceId && (!patch.category || !PUBLIC_SOURCE_INFO[current.sourceId].categories.includes(patch.category));
+  return {query,sourceId:incompatible ? undefined : current.sourceId};
+}
+export function selectPublicSource(current:PublicFilterState,sourceId?:string):PublicFilterState {
+  if(!sourceId)return {query:current.query,sourceId:undefined};
+  if(!sourceIds.has(sourceId))throw new Error("Źródło spoza publicznego zestawu.");
+  const id=sourceId as PublicSourceId,info=PUBLIC_SOURCE_INFO[id];
+  const query=changePublicQuery(current.query,{category:info.categories.length===1 ? info.categories[0] : undefined});
+  query.time_basis=PUBLIC_TIME_BASIS[info.categories[0]];
+  return {query,sourceId:id};
+}
+
+/** Counts refer to the full published artifact, not the current filters or map geometry. */
+export function publicSourceCoverage(snapshot:PublicSnapshot) {
+  const sources=new Map(snapshot.sources.map((source)=>[source.id,source]));
+  const counts=new Map<string,{records:number;cached:number}>();
+  for(const event of snapshot.events)for(const id of event.source_ids){
+    const count=counts.get(id) || {records:0,cached:0};
+    count.records+=1;
+    if(event.tags.includes("cached_public_data"))count.cached+=1;
+    counts.set(id,count);
+  }
+  const entries=PUBLIC_SOURCE_IDS.map((id)=>{
+    const source=sources.get(id) || null,count=counts.get(id) || {records:0,cached:0};
+    return {id,name:source?.name || PUBLIC_SOURCE_INFO[id].name,source,records:count.records,cached:count.cached,...publicSourceHealth(source,count.records)};
+  });
+  return {entries,expected:PUBLIC_SOURCE_IDS.length,present:snapshot.sources.length,
+    healthy:entries.filter((entry)=>entry.healthy).length,
+    empty:entries.filter((entry)=>entry.empty).length,
+    incomplete:entries.filter((entry)=>!entry.healthy && !entry.empty),
+    missing:entries.filter((entry)=>!entry.source)};
+}
+export type PublicSourceCoverage=ReturnType<typeof publicSourceCoverage>;
+
 /** The non-geospatial backend predicates, evaluated at the snapshot clock. */
-export function filterPublicSnapshot(snapshot:PublicSnapshot,query:EventQuery):EventsResponse {
+export function filterPublicSnapshot(snapshot:PublicSnapshot,query:EventQuery,sourceId?:string):EventsResponse {
+  if(sourceId && (!sourceIds.has(sourceId) || !snapshot.sources.some((source)=>source.id===sourceId)))throw new Error("Brak metadanych wybranego źródła w tym publicznym zestawie. Wybierz inne źródło.");
   if(query.time_basis==="changed" || query.region || query.radius_km!=null || query.lat!=null || query.lon!=null)throw new Error("Ten filtr wymaga prywatnego monitora i nie działa w publicznym podglądzie.");
   const now=Date.parse(snapshot.generated_at),until=query.until ? Date.parse(query.until) : now;
   const since=query.since ? Date.parse(query.since) : until-query.window_hours*3600000;
   if(!Number.isFinite(since) || !Number.isFinite(until) || since>=until || until>now || !integer(query.limit,1,1000))throw new Error("Nieprawidłowy zakres publicznego zestawu.");
   const matching=snapshot.events.filter((event)=>{
+    if(sourceId && !event.source_ids.includes(sourceId))return false;
     if(query.category && event.category!==query.category)return false;
     if(query.country && !event.countries.includes(query.country))return false;
     if(event.severity<query.severity_min || event.independent_source_count<query.min_sources)return false;
@@ -183,7 +236,9 @@ export function filterPublicSnapshot(snapshot:PublicSnapshot,query:EventQuery):E
   });
   matching.sort((a,b)=>b.severity-a.severity || Date.parse(eventTime(b,query.time_basis) || "")-Date.parse(eventTime(a,query.time_basis) || "") || (a.id<b.id?-1:a.id>b.id?1:0));
   const items=matching.slice(0,query.limit),mapped=items.filter((event)=>event.geometry!==null).length;
-  const limitations=[...snapshot.limitations,"To filtrowanie opublikowanego zestawu, bez połączenia z prywatnym monitorem. Statusy i odczyty dotyczą chwili jego przygotowania."];
+  const limitations=[...snapshot.limitations,"To filtrowanie opublikowanego zestawu, bez połączenia z prywatnym monitorem. Każde źródło ma własny czas ostatniego udanego odczytu. Przy błędzie zestaw może zawierać wcześniejsze publiczne dane."];
+  if(sourceId)limitations.push(`Wybrane źródło: ${snapshot.sources.find((source)=>source.id===sourceId)?.name}. Wybór źródła nie oznacza niezależnego potwierdzenia.`);
+  if(items.some((event)=>event.tags.includes("cached_public_data")))limitations.push("Część wyniku pochodzi z poprzedniego publicznego odczytu. Nowy plik zestawu nie odświeża tych dowodów.");
   if(query.time_basis==="published")limitations.push("Data publikacji nie jest czasem incydentu. Dopasowanie publikacji dziennej oznacza przecięcie dnia z oknem, nie znaną godzinę.");
   if(query.time_basis==="validity")limitations.push("Źródłowy przedział ważności przecina okno. Status pochodzi z zestawu; nie jest odtworzonym stanem historycznym. Brak końca pozostaje nieznany.");
   return {items,total:matching.length,shown:items.length,mapped,unlocated:items.length-mapped,truncated:items.length<matching.length,query:{...query,since:new Date(since).toISOString(),until:new Date(until).toISOString()},source_health:snapshot.sources,generated_at:snapshot.generated_at,limitations};

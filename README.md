@@ -8,11 +8,13 @@ Repozytorium obejmuje pełną instalację lokalną oraz **oddzielny statyczny po
 
 ## Co jest w tej wersji
 
-Pięć źródeł można czytać bez klucza: USGS, GDACS, MeteoAlarm dla Polski, EASA CZIB i CISA KEV. Szósty adapter, Cloudflare Radar, pozostaje w stanie `needs_credentials` bez tokenu. Nie zastępuje go fikcyjny strumień.
+Dziewięć źródeł można czytać bez klucza: USGS, GDACS, MeteoAlarm dla Polski, EASA CZIB, CISA KEV, NASA EONET, NOAA SWPC, GitHub Status i Cloudflare Status. Wszystkie dziewięć obejmuje też niezależny zestaw Pages. Dziesiąty adapter, Cloudflare Radar, pozostaje lokalnie w stanie `needs_credentials` bez tokenu; nie jest tym samym co Cloudflare Status.
+
+W publicznym panelu wybierz konkretne źródło, żeby zobaczyć jego dane i właściwą podstawę czasu. Licznik odróżnia kompletne niepuste odczyty od pustych, częściowych i błędnych. Źródła bez wiarygodnej lokalizacji pozostają na liście, zamiast otrzymywać fikcyjne punkty na mapie.
 
 Mapa, lista, dowody i pytania korzystają ze wspólnego modelu filtrów. Parser polskich pytań oraz briefing są deterministyczne. **AI jest wyłączone**; nie ma wywołań OpenAI/Ollama, pobierania modeli ani pozornego „AI risk score”.
 
-Dostępne dane nie obejmują śledzenia wojsk, samolotów i statków, pełnych NOTAM, GNSS ani rynku ropy. Brak wyniku nie dowodzi braku zdarzenia. [Zakres źródeł](DATA_SOURCES.md) opisuje również różnicę między incydentem, ostrzeżeniem i informacją o podatności.
+Dostępne dane nie obejmują śledzenia wojsk, samolotów i statków, pełnych NOTAM, pomiarów lokalnych zakłóceń GNSS ani rynku ropy. SWPC podaje komunikaty pogody kosmicznej, a statusy operatorów dotyczą ich usług, nie całego Internetu. Brak wyniku nie dowodzi braku zdarzenia. [Zakres źródeł](DATA_SOURCES.md) opisuje również różnicę między incydentem, ostrzeżeniem i informacją o podatności.
 
 ## Uruchomienie
 

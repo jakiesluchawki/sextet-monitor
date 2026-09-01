@@ -1,6 +1,6 @@
 import type { Geometry } from "geojson";
 
-export type Category = "earthquake" | "disaster" | "weather" | "aviation" | "cyber" | "internet";
+export type Category = "earthquake" | "disaster" | "weather" | "aviation" | "cyber" | "internet" | "space_weather";
 export type TimeBasis = "occurred" | "changed" | "published" | "validity";
 export type SourceState = "pending" | "ok" | "ok_empty" | "partial" | "error" | "stale" | "needs_credentials" | "disabled";
 export interface SourceStatus {

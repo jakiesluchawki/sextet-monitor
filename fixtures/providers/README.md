@@ -18,3 +18,10 @@ Format sources and attribution:
 - EASA: https://www.easa.europa.eu/en/domains/air-operations/czibs/export-json?_format=json&page= — EASA.
 - CISA: https://github.com/cisagov/kev-data — schema; data repo CC0.
 - Radar: https://developers.cloudflare.com/api/resources/radar/subresources/annotations/subresources/outages/methods/get/ — Cloudflare API schema/example.
+
+The EONET and SWPC fixtures are synthetic, use public response schemas, and make
+no claim about live hazards. Tests retain source identifiers, explicit UTC bulletin
+times, and conservative unknowns; no satellite images are included.
+
+- NASA EONET: https://eonet.gsfc.nasa.gov/docs/v3 — curated references; original-source rights remain separate.
+- NOAA SWPC: https://www.swpc.noaa.gov/products/alerts-watches-and-warnings — NOAA/NWS public domain, with attribution and no endorsement.

@@ -13,7 +13,7 @@ Interfejs wysyła żądania do `/api/*` w obrębie tego samego originu (same-ori
 | `since`, `until` | Opcjonalne daty w formacie ISO |
 | `country` | Kod kraju ISO2 |
 | `region` | Obsługiwana wartość: `europe` |
-| `category` | Kategoria zdarzenia |
+| `category` | `earthquake`, `disaster`, `weather`, `aviation`, `cyber`, `internet`, `space_weather` |
 | `severity_min` | 0–4 |
 | `min_sources` | 1–10 niezależnych źródeł |
 | `lat`, `lon`, `radius_km` | Współrzędne i promień; trzeba podać komplet trzech parametrów |

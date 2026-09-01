@@ -183,7 +183,7 @@ async function main() {
     images: { unoptimized: true },
   };\n`);
   await writeFile(join(buildRoot, "app/page.tsx"), 'import PublicMonitor from "@/components/PublicMonitor";\nexport default function Page() { return <PublicMonitor />; }\n');
-  const description = "Mapa zdarzeń i publiczne źródła: trzęsienia ziemi, ostrzeżenia pogodowe i podatności. Pochodzenie, daty i ograniczenia danych.";
+  const description = "Dziewięć publicznych źródeł: katastrofy, pogoda, lotnictwo, cyberbezpieczeństwo, pogoda kosmiczna i statusy usług. Mapa, daty i dowody.";
   const publicMetadata = {
     title: "Sextet Monitor",
     description,

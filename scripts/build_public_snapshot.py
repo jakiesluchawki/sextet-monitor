@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 
@@ -12,9 +13,10 @@ def main():
     destination = ROOT / "web/public/snapshot.json"
     try:
         result = compose(
-            "run", "--rm", "--no-deps", "--env", "PUBLIC_BUILD_ADMIN_URL", "api",
+            "run", "--rm", "--no-deps", "--env", "PUBLIC_BUILD_ADMIN_URL", "--env", "MONITOR_PUBLIC_SITE_URL", "api",
             "python", "-m", "monitor.public_snapshot", capture=True,
-            extra_env={"PUBLIC_BUILD_ADMIN_URL": admin_url("postgres")},
+            extra_env={"PUBLIC_BUILD_ADMIN_URL": admin_url("postgres"),
+                       "MONITOR_PUBLIC_SITE_URL": os.getenv("MONITOR_PUBLIC_SITE_URL", "")},
         )
         payload = result.stdout
         if not payload or len(payload) > 16 * 1024 * 1024:
@@ -27,7 +29,8 @@ def main():
         temporary.replace(destination)
         print(json.dumps({"public_snapshot": str(destination.relative_to(ROOT)), "bytes": len(payload),
                           "events": len(parsed["events"]), "generated_at": parsed["generated_at"],
-                          "sources": [{"id": item["id"], "status": item["status"]} for item in parsed["sources"]],
+                          "sources": [{"id": item["id"], "status": item["status"], "record_count": item["record_count"]}
+                                      for item in parsed["sources"]],
                           "private_database_exported": False}, ensure_ascii=False))
     except subprocess.CalledProcessError:
         print("Nie udało się zebrać publicznych źródeł w nowej bazie. Poprzedni plik pozostaje bez zmian.", file=sys.stderr)

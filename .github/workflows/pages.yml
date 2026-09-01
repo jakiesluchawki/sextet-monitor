@@ -38,6 +38,8 @@ jobs:
           docker compose run --rm --no-deps --volume "${GITHUB_WORKSPACE}/fixtures:/fixtures:ro" api python -m pytest -q -p no:cacheprovider
       - name: Collect only allowlisted public sources in another fresh disposable database
         run: python3 scripts/build_public_snapshot.py
+        env:
+          MONITOR_PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
       - name: Check frontend and build a static site without API routes
         working-directory: web
         run: |
