@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+<identifier>2.49.0.0.616.0.PL.Sk20260825093319442.PL2862</identifier>
+<sender>https://www.imgw.pl</sender>
+<sent>2026-08-25T11:33:00+02:00</sent>
+<status>Actual</status><msgType>Alert</msgType><scope>Public</scope>
+<info>
+<language>pl-PL</language><category>Met</category><event>Żółty alert na gęsta mgła</event>
+<urgency>Expected</urgency><severity>Moderate</severity><certainty>Likely</certainty>
+<effective>2026-08-25T11:33:00+02:00</effective>
+<onset>2026-08-26T00:00:00+02:00</onset>
+<expires>2026-08-26T09:00:00+02:00</expires>
+<senderName>IMGW-PIB</senderName>
+<headline>Żółty alert na gęsta mgła dla Polski - powiat Olsztyn</headline>
+<description>Prognozuje się gęste mgły.</description>
+<web>https://meteo.imgw.pl/dyn/?osmet=true</web>
+<area><areaDesc>powiat Olsztyn</areaDesc><geocode><valueName>EMMA_ID</valueName><value>PL2862</value></geocode></area>
+</info>
+<info>
+<language>en-GB</language><category>Met</category><event>Yellow Fog warning</event>
+<urgency>Expected</urgency><severity>Moderate</severity><certainty>Likely</certainty>
+<effective>2026-08-25T11:33:00+02:00</effective>
+<onset>2026-08-26T00:00:00+02:00</onset>
+<expires>2026-08-26T09:00:00+02:00</expires>
+<senderName>IMGW-PIB</senderName><headline>Yellow Dense fog warning - Olsztyn County</headline>
+<description>Dense fog is forecast.</description>
+<area><areaDesc>Olsztyn County</areaDesc><geocode><valueName>EMMA_ID</valueName><value>PL2862</value></geocode></area>
+</info>
+</alert>

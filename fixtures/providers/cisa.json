@@ -1,0 +1,23 @@
+{
+  "title": "Synthetic fixture using the CISA KEV schema",
+  "catalogVersion": "2026.08.26",
+  "dateReleased": "2026-08-26T17:00:09.8976Z",
+  "count": 1,
+  "vulnerabilities": [
+    {
+      "cveID": "CVE-2026-99999",
+      "vendorProject": "Example Vendor",
+      "product": "Example Product",
+      "vulnerabilityName": "Example vulnerability (test fixture only)",
+      "dateAdded": "2026-08-26",
+      "shortDescription": "Synthetic parser fixture, not a real incident.",
+      "requiredAction": "Apply the vendor update.",
+      "dueDate": "2026-09-16",
+      "knownRansomwareCampaignUse": "Unknown",
+      "notes": "Fixture only",
+      "cwes": [
+        "CWE-20"
+      ]
+    }
+  ]
+}

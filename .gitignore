@@ -1,0 +1,19 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+web/node_modules/
+web/.next/
+web/out/
+work/
+backups/
+.DS_Store
+*.log
+
+# Public builds are artifacts, not source history.
+web/.pages-build/
+web/public/snapshot.json
+web/public/snapshot.json.building
+web/public/THIRD_PARTY_NOTICES.txt

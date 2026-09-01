@@ -1,0 +1,52 @@
+{
+  "success": true,
+  "result": {
+    "annotations": [
+      {
+        "id": "550",
+        "asns": [
+          189
+        ],
+        "asnsDetails": [
+          {
+            "asn": "189",
+            "name": "LUMEN-LEGACY-L3-PARTITION",
+            "locations": {
+              "code": "US",
+              "name": "United States"
+            }
+          }
+        ],
+        "dataSource": "ALL",
+        "eventType": "OUTAGE",
+        "locations": [
+          "US"
+        ],
+        "locationsDetails": [
+          {
+            "code": "US",
+            "name": "United States"
+          }
+        ],
+        "origins": [
+          "amazon-us-east-1"
+        ],
+        "originsDetails": [
+          {
+            "name": "us-east-1 Amazon Web Services",
+            "origin": "amazon-us-east-1"
+          }
+        ],
+        "outage": {
+          "outageCause": "CABLE_CUT",
+          "outageType": "NATIONWIDE"
+        },
+        "startDate": "2019-12-27T18:11:19.117Z",
+        "description": "example (official schema fixture, not a current event)",
+        "endDate": "2019-12-27T19:11:19.117Z",
+        "linkedUrl": "http://example.com",
+        "scope": "Example location"
+      }
+    ]
+  }
+}

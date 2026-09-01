@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+<id>https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-poland</id>
+<title>MeteoAlarm Poland</title>
+<updated>2026-08-26T20:35:35.064144Z</updated>
+<entry>
+<id>https://feeds.meteoalarm.org/api/v1/warnings/feeds-poland/90f17002-353a-4686-88d3-0af8cde7f40c?index_info=0</id>
+<title>Żółty alert na gęstą mgłę</title>
+<updated>2026-08-25T09:33:00Z</updated>
+<link type="application/cap+xml" href="https://feeds.meteoalarm.org/api/v1/warnings/feeds-poland/90f17002-353a-4686-88d3-0af8cde7f40c"/>
+</entry>
+<entry>
+<id>https://feeds.meteoalarm.org/api/v1/warnings/feeds-poland/90f17002-353a-4686-88d3-0af8cde7f40c?index_info=1</id>
+<title>Yellow Fog Warning</title>
+<updated>2026-08-25T09:33:00Z</updated>
+<link type="application/cap+xml" href="https://feeds.meteoalarm.org/api/v1/warnings/feeds-poland/90f17002-353a-4686-88d3-0af8cde7f40c"/>
+</entry>
+</feed>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:gdacs="http://www.gdacs.org" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" xmlns:georss="http://www.georss.org/georss">
+<channel>
+<title>GDACS RSS information</title>
+<link>https://www.gdacs.org/</link>
+<description>Near real-time notification about natural disaster with a potential humanitarian impact</description>
+<pubDate>Wed, 26 Aug 2026 20:15:04 GMT</pubDate>
+<item>
+<title>Green earthquake (Magnitude 5.6M, Depth:10km) in Japan 26/08/2026 19:21 UTC</title>
+<description>Magnitude 5.6M, Depth:10km.</description>
+<link>https://www.gdacs.org/report.aspx?eventtype=EQ&amp;eventid=1561972</link>
+<pubDate>Wed, 26 Aug 2026 19:39:59 GMT</pubDate>
+<gdacs:dateadded>Wed, 26 Aug 2026 19:39:59 GMT</gdacs:dateadded>
+<gdacs:datemodified>Wed, 26 Aug 2026 19:53:05 GMT</gdacs:datemodified>
+<gdacs:iscurrent>true</gdacs:iscurrent>
+<gdacs:fromdate>Wed, 26 Aug 2026 19:21:41 GMT</gdacs:fromdate>
+<gdacs:todate>Wed, 26 Aug 2026 19:21:41 GMT</gdacs:todate>
+<guid isPermaLink="false">EQ1561972</guid>
+<geo:Point><geo:lat>38.1292</geo:lat><geo:long>143.8477</geo:long></geo:Point>
+<georss:point>38.1292 143.8477</georss:point>
+<gdacs:eventtype>EQ</gdacs:eventtype>
+<gdacs:eventid>1561972</gdacs:eventid>
+<gdacs:episodeid>1729395</gdacs:episodeid>
+<gdacs:version>1</gdacs:version>
+<gdacs:alertlevel>Green</gdacs:alertlevel>
+<gdacs:iso3>JPN</gdacs:iso3>
+<gdacs:country>Japan</gdacs:country>
+<gdacs:resources><gdacs:resource source="EC-JRC" url="https://www.gdacs.org/contentdata/resources/EQ/1561972/rss_1561972.xml" /></gdacs:resources>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,16 @@
+node_modules
+.next
+.npm-cache
+.env
+.env.*
+*.tsbuildinfo
+.git
+
+public/maplibre
+
+# The private web image does not carry the separate Pages build or data.
+.pages-build
+out
+public/snapshot.json
+public/snapshot.json.building
+public/THIRD_PARTY_NOTICES.txt

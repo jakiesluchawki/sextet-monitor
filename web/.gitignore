@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env*
+!.env.example
+.npm-cache/
+
+# Generated from the exact installed MapLibre version by prepare:map.
+public/maplibre/

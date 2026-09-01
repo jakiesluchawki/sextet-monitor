@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated": 1787777700000,
+    "count": 1
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "tx2026quqlha",
+      "properties": {
+        "mag": 2,
+        "place": "59 km S of Whites City, New Mexico",
+        "time": 1787777287551,
+        "updated": 1787777522700,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/tx2026quqlha",
+        "status": "automatic",
+        "net": "tx",
+        "ids": ",tx2026quqlha,",
+        "sources": ",tx,",
+        "magType": "ml",
+        "type": "earthquake",
+        "title": "M 2.0 - 59 km S of Whites City, New Mexico"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -104.313,
+          31.645,
+          4.0435
+        ]
+      }
+    }
+  ]
+}

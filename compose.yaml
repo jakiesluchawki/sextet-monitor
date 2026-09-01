@@ -1,0 +1,69 @@
+name: mieszko-monitor
+services:
+  db:
+    build:
+      context: ./docker/db
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_DB: monitor
+      POSTGRES_USER: monitor_admin
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?Run scripts/manage.py init}
+      MONITOR_WORKER_PASSWORD: ${DB_WORKER_PASSWORD:?Run scripts/manage.py init}
+      MONITOR_READER_PASSWORD: ${DB_READER_PASSWORD:?Run scripts/manage.py init}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U monitor_admin -d monitor"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    logging:
+      options: {max-size: "5m", max-file: "2"}
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://monitor_reader:${DB_READER_PASSWORD}@db:5432/monitor
+      MONITOR_TIMEZONE: Europe/Warsaw
+    depends_on:
+      db: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 12
+    restart: unless-stopped
+    logging:
+      options: {max-size: "5m", max-file: "2"}
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "-m", "monitor.worker"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://monitor_worker:${DB_WORKER_PASSWORD}@db:5432/monitor
+      CLOUDFLARE_RADAR_TOKEN: ${CLOUDFLARE_RADAR_TOKEN:-}
+      MONITOR_TIMEZONE: Europe/Warsaw
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+    logging:
+      options: {max-size: "5m", max-file: "2"}
+  web:
+    build:
+      context: ./web
+    environment:
+      BACKEND_URL: http://api:8000
+      NEXT_TELEMETRY_DISABLED: "1"
+      PORT: "3000"
+    ports:
+      - "127.0.0.1:3180:3000"
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+    logging:
+      options: {max-size: "5m", max-file: "2"}
+volumes:
+  database:
