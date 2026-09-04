@@ -39,9 +39,9 @@ function sourceFixture(overrides:Partial<SourceStatus>={}):SourceStatus {
 test("both editions use shared Sextet branding rather than a personal monitor name",()=>{
   for(const component of [Monitor,PublicMonitor]){
     const markup=renderToStaticMarkup(React.createElement(component));
-    assert.match(markup,/<h1>Sextet Monitor<\/h1>/);
+    assert.match(markup,/Sextet Monitor/);
     assert.doesNotMatch(markup,/mieszko/i);
-    assert.match(markup,/class="brand-mark"[^>]*>s<span/);
+    assert.match(markup,component===Monitor ? /class="brand-mark"[^>]*>s<span/ : /aria-label="Sextet Monitor, przegląd"/);
   }
 });
 
@@ -644,5 +644,6 @@ test("source selection is a labelled public-only control, all categories are rea
   assert.doesNotMatch(privateMarkup,/public-source|Źródło danych/);
   const shell=renderToStaticMarkup(React.createElement(PublicMonitor));
   assert.match(shell,/aria-controls="public-details-panel">Źródła/);
-  assert.match(shell,/GitHub i Cloudflare/);
+  assert.match(shell,/aria-label="Główne widoki"/);
+  assert.match(shell,/Bez danych zastępczych/);
 });

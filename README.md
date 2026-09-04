@@ -1,8 +1,8 @@
 # Sextet Monitor
 
-Monitor publicznych źródeł dla grupy: mapa, lista zdarzeń i materiał źródłowy. Pełna instalacja z prywatną historią i briefingami pozostaje lokalna. Kod Phase 1 powstał od zera, bez kopiowania World Monitor. Nie jest kompletnym obrazem świata ani narzędziem do decyzji operacyjnych o bezpieczeństwie.
+Monitor publicznych źródeł dla grupy: przegląd sytuacji, mapa, zapisy źródłowe i briefing do udostępnienia. Pełna instalacja z prywatną bazą, historią i pytaniami pozostaje lokalna. Kod powstał od zera, bez kopiowania World Monitor. Nie jest kompletnym obrazem świata ani narzędziem do decyzji operacyjnych o bezpieczeństwie.
 
-**Aktualizacja 1.09.2026:** poprawki przetwarzania danych, pytań, briefingów i odświeżania dowodów opisuje [CHANGELOG](CHANGELOG.md). Testy uruchamia też GitHub Actions. Formalna próba 72 godzin nadal nie została wykonana.
+**Wersja 02 — kod z 5.09.2026:** nowy publiczny przegląd, globus, wyszukiwanie, lokalne przypięcia, porównanie zestawów i briefing. Nadal korzysta z tych samych dziewięciu źródeł; ta aktualizacja nie dodaje dostawców. [CHANGELOG](CHANGELOG.md) opisuje zmiany w kodzie, nie potwierdzenie bieżącego wdrożenia. Formalna próba 72 godzin nadal nie została wykonana.
 
 Repozytorium obejmuje pełną instalację lokalną oraz **oddzielny statyczny podgląd**. GitHub Pages nie uruchamia backendu ani prywatnej bazy; zakres zatwierdzonej publicznej wersji i kontrolowaną publikację opisuje [PUBLIC_PAGES](PUBLIC_PAGES.md).
 
@@ -10,9 +10,19 @@ Repozytorium obejmuje pełną instalację lokalną oraz **oddzielny statyczny po
 
 Dziewięć źródeł można czytać bez klucza: USGS, GDACS, MeteoAlarm dla Polski, EASA CZIB, CISA KEV, NASA EONET, NOAA SWPC, GitHub Status i Cloudflare Status. Wszystkie dziewięć obejmuje też niezależny zestaw Pages. Dziesiąty adapter, Cloudflare Radar, pozostaje lokalnie w stanie `needs_credentials` bez tokenu; nie jest tym samym co Cloudflare Status.
 
-W publicznym panelu wybierz konkretne źródło, żeby zobaczyć jego dane i właściwą podstawę czasu. Licznik odróżnia kompletne niepuste odczyty od pustych, częściowych i błędnych. Źródła bez wiarygodnej lokalizacji pozostają na liście, zamiast otrzymywać fikcyjne punkty na mapie.
+Publiczna wersja ma trzy widoki:
 
-Mapa, lista, dowody i pytania korzystają ze wspólnego modelu filtrów. Parser polskich pytań oraz briefing są deterministyczne. **AI jest wyłączone**; nie ma wywołań OpenAI/Ollama, pobierania modeli ani pozornego „AI risk score”.
+- **Przegląd** — globus z przełączeniem na mapę 2D, do ośmiu wyróżnień z jawnym powodem wyboru oraz oś czasu z tabelą wartości. Wyróżnienia zapewniają miejsce różnym kategoriom; nie są rankingiem zagrożeń.
+- **Mapa i dane** — dosłowne wyszukiwanie w tytułach, opisach, krajach i nazwach źródeł oraz filtry źródła i kategorii. Lista udostępnia kolejne strony całego wyniku; mapa ma jawny limit 500 rekordów. Brak geometrii pozostaje na liście, bez fikcyjnych punktów.
+- **Briefing** — wybór monitora albo własne przypięcia, do 12 pozycji z datami, oryginalnymi linkami i ograniczeniami. „Kopiuj do Signala” kopiuje tekst do schowka; niczego nie wysyła. Dostępny jest też zapis `.md` i druk/PDF przez przeglądarkę.
+
+Wybierz świat, Europę, Polskę lub Turcję oraz 24 h, 72 h albo 7 dni. Okno kończy się w chwili przygotowania zestawu. Europa jest jawną listą krajów, z Cyprem i Kosowem, bez Rosji i Turcji; filtr korzysta z kodów krajów źródła, nie z przecięcia geometrii. Nie przypisuje globalnych usług ani nieznanych lokalizacji do wybranego regionu. Trzęsienia i katastrofy liczymy według początku zdarzenia, pogodę i lotnictwo według ważności, pozostałe kategorie według publikacji. Ostrzeżenie może występować w wielu przedziałach osi czasu, więc ich suma nie oznacza liczby unikalnych zdarzeń.
+
+Gwiazdka zapisuje do 30 publicznych identyfikatorów tylko w tej przeglądarce. W briefingu można zarządzać wszystkimi przypięciami, także tymi spoza zakresu lub nieobecnymi w nowym zestawie. Lokalny punkt porównania wykrywa nowe i zmienione zapisy względem wybranego zestawu; nie jest pełną historią źródeł. Nowy wpis może opisywać stare zdarzenie, a brak wpisu nie dowodzi jego zakończenia. Blokada lub wyczyszczenie pamięci przeglądarki może usunąć przypięcia i punkt odniesienia.
+
+Link do widoku lub zapisu otwiera **najnowszy dostępny zestaw**, nie archiwum. Nie przenosi przypięć ani punktu porównania na inne urządzenie. „Filtry szczegółowe” zachowują wcześniejszy interfejs z wyborem podstawy czasu i przesuwaniem okna. Licznik źródeł odróżnia odczyty bez ostrzeżeń od pustych, częściowych i błędnych; liczby oraz stan dostawców zależą od konkretnego odczytu.
+
+Publiczny przegląd i tekst briefingu powstają z reguł oraz pól źródłowych, bez prywatnego API. W instalacji lokalnej mapa, lista, dowody i pytania nadal korzystają ze wspólnego modelu filtrów. **AI jest wyłączone**; nie ma wywołań OpenAI/Ollama, pobierania modeli ani pozornego „AI risk score”.
 
 Dostępne dane nie obejmują śledzenia wojsk, samolotów i statków, pełnych NOTAM, pomiarów lokalnych zakłóceń GNSS ani rynku ropy. SWPC podaje komunikaty pogody kosmicznej, a statusy operatorów dotyczą ich usług, nie całego Internetu. Brak wyniku nie dowodzi braku zdarzenia. [Zakres źródeł](DATA_SOURCES.md) opisuje również różnicę między incydentem, ostrzeżeniem i informacją o podatności.
 

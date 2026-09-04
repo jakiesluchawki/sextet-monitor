@@ -1,6 +1,6 @@
 {
   "name": "sextet-monitor-web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "engines": {
     "node": ">=20.9.0"
@@ -10,7 +10,7 @@
     "build": "NEXT_TELEMETRY_DISABLED=1 next build --webpack",
     "start": "NEXT_TELEMETRY_DISABLED=1 next start --hostname 127.0.0.1 --port 3180",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/frontend.test.ts",
+    "test": "node --import tsx --test tests/*.test.ts",
     "prepare:map": "node scripts/prepare-map-assets.mjs",
     "predev": "npm run prepare:map",
     "prebuild": "npm run prepare:map",

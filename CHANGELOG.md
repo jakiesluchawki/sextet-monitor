@@ -1,4 +1,20 @@
-# Zmiany — 1.09.2026
+# Zmiany
+
+## 02 — 5.09.2026
+
+Zakres zmian w kodzie publicznego interfejsu. Ten wpis nie potwierdza jeszcze publikacji na produkcji. Pozostaje dziewięć dotychczasowych kanałów danych; nie dodano źródeł, prywatnego API ani usług AI.
+
+- Nowe widoki „Przegląd”, „Mapa i dane” i „Briefing”. Przegląd wybiera do ośmiu zapisów według jawnych reguł, z reprezentacją różnych kategorii i uzasadnieniem przy każdym wyróżnieniu. Nie wyznacza prawdopodobieństwa zagrożenia ani przyczyn.
+- Globus i mapa 2D korzystają z lokalnego podkładu i oryginalnych geometrii. Kamera ma skróty obszarów, przybliżanie i dopasowanie danych. Nieznane pozycje nie stają się punktami; przy niedostępnym WebGL pozostaje lista. Jawny limit mapy wynosi 500 rekordów, a lista udostępnia cały wynik partiami.
+- Zakresy świata, Europy, Polski i Turcji oraz okna 24 h, 72 h i 7 dni kończą się w chwili przygotowania zestawu. Filtr Europy używa jawnej listy kodów krajów, nie geometrii kontynentu. Rodzaje materiału zachowują osobne daty wystąpienia, publikacji i ważności; oś czasu ma tabelę oraz ostrzeżenie przed sumowaniem wielokrotnie uwzględnionych ostrzeżeń.
+- Dosłowne wyszukiwanie uwzględnia tytuły, opisy, kraje i nazwy źródeł, także bez polskich znaków. Filtry źródła i kategorii nie wysyłają zapytań do prywatnego monitora. Dotychczasowe szczegółowe filtry i oś czasu pozostają w `DetailedExplorer`.
+- Do 30 przypięć zapisuje się lokalnie jako publiczne UUID, bez kopii opisów. Zarządzanie w briefingu pozwala usunąć również identyfikator nieobecny w bieżącym zestawie. Odczyt storage przed pojedynczą zmianą ogranicza nadpisywanie stanu innej karty; pamięć przeglądarki nie zapewnia transakcji między kartami ani trwałości po jej wyczyszczeniu.
+- Lokalny punkt porównania zawiera czas zestawu oraz pary UUID–niekryptograficzny odcisk treści. Ponowne pobranie i przebudowa bazy nie tworzą pozornych zmian. Starszy zestaw nie cofa zapisanego punktu, a sprzecznych zestawów o identycznym czasie nie porządkujemy arbitralnie. Brak rekordu nie jest oznaczany jako zakończenie zdarzenia.
+- Briefing z wyróżnień albo przypięć zachowuje daty, oryginalne adresy, pochodzenie i ograniczenia. Limit wynosi 12 pozycji. Można skopiować tekst, zapisać Markdown lub wywołać druk/PDF; nie ma automatycznej wysyłki do Signala ani do innych usług.
+- Linki zapisują wyłącznie zatwierdzone ustawienia widoku i opcjonalny publiczny UUID w hashu. Usuwają zastane query/hash z kopiowanego adresu. Link odnosi się do najnowszego dostępnego zestawu, nie archiwizuje danych i nie przenosi lokalnej listy przypięć ani punktu porównania.
+- Testy obejmują reguły przeglądu i czasu, kamerę mapy, wyszukiwanie, bezpieczne linki oraz ograniczone i wersjonowane dane przeglądarki. Testy jednostkowe nie zastępują sprawdzenia WebGL, telefonu, klawiatury i działającej publikacji. Nie wykonano formalnej próby 72 godzin ani nie ustanowiono SLA świeżości.
+
+## 1.09.2026
 
 Poprawki po audycie lokalnej wersji z 27.08.2026.
 

@@ -13,9 +13,11 @@ const marker = JSON.stringify({ format: 1, owner: "mieszko-monitor-pages-build",
 const basePath = process.env.MONITOR_PAGES_BASE_PATH ?? "/sextet-monitor";
 const sourceFiles = [
   "app/globals.css",
-  ...["PublicMonitor", "EventMap", "EventList", "EventEvidence", "FilterPanel", "SourcePanel", "Icon"]
+  "app/sextet.css",
+  "components/map-experience.css",
+  ...["PublicMonitor", "DetailedExplorer", "SituationOverview", "SignalRows", "EventMap", "EventList", "EventEvidence", "FilterPanel", "SourcePanel", "Icon"]
     .map((name) => `components/${name}.tsx`),
-  ...["public-snapshot", "assets", "contracts", "filters", "format", "map-data", "countries"]
+  ...["public-snapshot", "public-session", "public-view", "situation", "map-camera", "assets", "contracts", "filters", "format", "map-data", "countries"]
     .map((name) => `lib/${name}.ts`),
 ];
 const publicFiles = [
@@ -183,7 +185,7 @@ async function main() {
     images: { unoptimized: true },
   };\n`);
   await writeFile(join(buildRoot, "app/page.tsx"), 'import PublicMonitor from "@/components/PublicMonitor";\nexport default function Page() { return <PublicMonitor />; }\n');
-  const description = "Dziewięć publicznych źródeł: katastrofy, pogoda, lotnictwo, cyberbezpieczeństwo, pogoda kosmiczna i statusy usług. Mapa, daty i dowody.";
+  const description = "Sextet Monitor 02: przegląd sytuacji, interaktywna mapa, zmiany w źródłach i briefing do udostępnienia. Publiczne dane, jawne ograniczenia.";
   const publicMetadata = {
     title: "Sextet Monitor",
     description,

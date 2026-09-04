@@ -1,4 +1,6 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
+@import "../components/map-experience.css";
+@import "./sextet.css";
 
 :root {
   color-scheme: dark;

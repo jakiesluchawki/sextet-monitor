@@ -1,0 +1,46 @@
+/* Camera controls are deliberately distinct from the shared data filters. */
+.event-map.map-experience { display: flex; flex-direction: column; background: var(--surface); min-height: 300px; }
+.map-camera-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.map-camera-presets, .map-camera-actions, .map-projection-controls { display: flex; align-items: center; gap: 3px; }
+.map-camera-presets { flex-wrap: wrap; }
+.map-camera-label { color: var(--muted); font-size: 10px; margin-right: 4px; }
+.map-camera-controls button { min-height: 30px; padding: 5px 9px; font-size: 11px; background: transparent; }
+.map-camera-presets button { border-color: transparent; }
+.map-camera-controls button:hover:not(:disabled) { background: var(--surface-raised); border-color: var(--line); }
+.map-camera-controls button[aria-pressed="true"] { background: var(--selected, oklch(0.29 0.027 140)); color: var(--accent); border-color: var(--line); }
+.map-camera-actions { margin-left: auto; flex-wrap: wrap; }
+.map-camera-note { flex-basis: 100%; color: var(--subtle); font-size: 10px; }
+.map-stage { position: relative; min-height: 180px; flex: 1 1 auto; background: oklch(0.17 0.008 155); isolation: isolate; }
+.map-stage > .map-loading { position: absolute; inset: 0; z-index: 1; min-height: 0; }
+.map-experience .map-toolbar { top: 10px; left: 10px; right: 10px; align-items: flex-start; }
+.map-experience .map-toolbar button { min-height: 32px; font-size: 11px; padding: 5px 10px; }
+.map-experience .map-zoom { gap: 4px; }
+.map-experience .map-zoom button { width: 34px; padding: 0; font-size: 20px; }
+.map-experience .map-zoom .map-reset-north { font-size: 11px; }
+.map-experience .map-projection-controls { padding: 2px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); pointer-events: auto; }
+.map-projection-controls button { border-color: transparent; box-shadow: none; }
+.map-projection-controls button[aria-pressed="true"] { color: var(--accent); background: var(--surface-raised); }
+.map-projection-note { position: absolute; left: 12px; bottom: 7px; max-width: calc(100% - 65px); padding: 2px 5px; background: var(--surface); color: var(--muted); font-size: 9px; pointer-events: none; }
+.map-experience .map-warning { top: 49px; z-index: 3; margin: 0; }
+.map-coverage { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 7px 12px 5px; color: var(--muted); font-size: 10px; border-top: 1px solid var(--line); }
+.map-coverage strong { color: var(--text); font-weight: 600; }
+.map-coverage button { border: 0; padding: 0; min-height: 22px; color: var(--muted); background: none; font-size: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.map-coverage button:hover:not(:disabled) { color: var(--text); background: none; }
+.map-experience .map-legend { position: static; max-width: none; margin: 0; padding: 2px 12px 7px; border: 0; border-radius: 0; background: none; gap: 4px 10px; font-size: 10px; }
+.map-empty-state { position: absolute; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(310px, calc(100% - 100px)); padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--muted); font-size: 11px; line-height: 1.5; }
+.map-empty-state strong { display: block; color: var(--text); font-size: 12px; margin-bottom: 4px; }
+.map-empty-state button { margin-top: 9px; font-size: 11px; }
+.map-experience .map-fallback { z-index: 3; padding: 20px; }
+.map-selected-note { max-width: 55ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.map-experience .cluster-count { min-width: 34px; min-height: 34px; font-size: 12px; }
+.map-experience .cluster-count.maplibregl-marker-covered { visibility: hidden; pointer-events: none; }
+.map-camera-announcement { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 900px) {
+  .map-camera-controls { padding: 8px 10px; gap: 5px 8px; }
+  .map-camera-controls button { min-height: 34px; }
+  .map-camera-actions { margin-left: 0; }
+  .map-camera-note { font-size: 9px; }
+  .map-coverage { padding: 7px 10px 4px; }
+  .map-experience .map-legend { padding: 2px 10px 8px; }
+  .map-projection-note { bottom: 32px; }
+}
