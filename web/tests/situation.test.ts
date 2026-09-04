@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Category, EventDetail, SourceStatus } from "../lib/contracts";
 import { PUBLIC_SOURCE_IDS, PUBLIC_SOURCE_INFO, PUBLIC_TIME_BASIS, type PublicSnapshot } from "../lib/public-snapshot";
-import { advisoryState, buildSituation, createBriefingText, formatSituationTime, scopeCountries, scopeLabel, SITUATION_CATEGORIES } from "../lib/situation";
+import { advisoryState, buildSituation, createBriefingText, formatSituationTime, SITUATION_CATEGORIES } from "../lib/situation";
+import { getScopeCountries, getScopeLabel, type ScopeId } from "../lib/areas";
 
 const AT = "2026-09-05T12:00:00Z", NOW = Date.parse(AT), HOUR = 3_600_000;
 function event(overrides: Partial<EventDetail> = {}): EventDetail {
@@ -52,11 +53,11 @@ test("all selected events are counted beyond the ordinary 300 row limit", () => 
 });
 
 test("scope definitions are explicit and unknown or geometric-only countries do not become regional", () => {
-  assert.equal(scopeCountries.world, null);
-  assert.equal(scopeLabel.poland, "Polska");
-  assert.equal(scopeCountries.europe?.includes("PL"), true);
-  assert.equal(scopeCountries.europe?.includes("CY"), true);
-  assert.equal(scopeCountries.europe?.includes("TR"), false);
+  assert.equal(getScopeCountries("world"), null);
+  assert.equal(getScopeLabel("poland"), "Polska");
+  assert.equal(getScopeCountries("europe")?.includes("PL"), true);
+  assert.equal(getScopeCountries("europe")?.includes("CY"), true);
+  assert.equal(getScopeCountries("europe")?.includes("TR"), false);
   const saved = snapshot([
     event({ id: "pl", countries: ["PL"] }), event({ id: "tr", countries: ["TR"] }),
     event({ id: "de", countries: ["DE"] }), event({ id: "ru", countries: ["RU"] }),
@@ -64,7 +65,7 @@ test("scope definitions are explicit and unknown or geometric-only countries do 
     event({ id: "lower", countries: ["pl"] }), event({ id: "multiple", countries: ["TR", "PL"] }),
   ]);
   assert.deepEqual(buildSituation(saved, { scope: "poland", hours: 24 }).events.map((item) => item.id), ["multiple", "pl"]);
-  assert.deepEqual(buildSituation(saved, { scope: "turkey", hours: 24 }).events.map((item) => item.id), ["multiple", "tr"]);
+  assert.deepEqual(buildSituation(saved, { scope: "country:TR", hours: 24 }).events.map((item) => item.id), ["multiple", "tr"]);
   assert.equal(buildSituation(saved, { scope: "europe", hours: 24 }).events.length, 3);
   assert.equal(buildSituation(saved, { scope: "world", hours: 24 }).events.length, 7);
   const regional = buildSituation(saved, { scope: "poland", hours: 24 });
@@ -372,4 +373,33 @@ test("a resolved incident in the briefing is explicitly completed rather than ac
   assert.match(text, /Stan rekordu w zestawie: zakończone\./);
   assert.doesNotMatch(text, /Stan rekordu w zestawie: aktywne|Status: ważne|Stan rekordu w zestawie: wygasłe/);
   assert.equal(result.activeAdvisories, 0);
+});
+
+test("any supported country scope filters explicit source codes without assigning unknown or neighboring records", () => {
+  const saved = snapshot([
+    event({ id: "japan", countries: ["JP"] }), event({ id: "france", countries: ["FR"] }),
+    event({ id: "kosovo", countries: ["XK"] }), event({ id: "guadeloupe", countries: ["GP"] }),
+    event({ id: "unlocated", geometry: { type: "Point", coordinates: [139.7, 35.7] } }),
+  ]);
+  for (const [scope, id] of [["country:JP", "japan"], ["country:FR", "france"], ["country:XK", "kosovo"], ["country:GP", "guadeloupe"]] as const) {
+    const result = buildSituation(saved, { scope, hours: 24 });
+    assert.deepEqual(result.events.map(({ id }) => id), [id]);
+    assert.equal(result.scope, scope);
+    assert.equal(result.scopeLabel, getScopeLabel(scope));
+    assert.match(createBriefingText(result, saved), /Zakres obejmuje wyłącznie jawne kody krajów/);
+  }
+});
+
+test("situation canonicalizes Poland and old Turkey scopes and rejects unsupported country scopes", () => {
+  const saved = snapshot([event({ id: "pl", countries: ["PL"] }), event({ id: "tr", countries: ["TR"] })]);
+  const poland = buildSituation(saved, { scope: "country:pl", hours: 24 });
+  assert.equal(poland.scope, "poland");
+  assert.deepEqual(poland.events.map(({ id }) => id), ["pl"]);
+  const turkey = buildSituation(saved, { scope: "turkey" as ScopeId, hours: 24 });
+  assert.equal(turkey.scope, "country:TR");
+  assert.equal(turkey.scopeLabel, "Turcja");
+  assert.deepEqual(turkey.events.map(({ id }) => id), ["tr"]);
+  for (const scope of ["country:ZZ", "country:EU", "country:UK", "country:__proto__", "country:", "country:TR,PL"] as ScopeId[]) {
+    assert.throws(() => buildSituation(saved, { scope, hours: 24 }), /Nieznany zakres/);
+  }
 });

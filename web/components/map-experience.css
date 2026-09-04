@@ -10,6 +10,7 @@
 .map-camera-controls button[aria-pressed="true"] { background: var(--selected, oklch(0.29 0.027 140)); color: var(--accent); border-color: var(--line); }
 .map-camera-actions { margin-left: auto; flex-wrap: wrap; }
 .map-camera-note { flex-basis: 100%; color: var(--subtle); font-size: 10px; }
+.map-camera-scope-note { color: var(--muted); line-height: 1.4; }
 .map-stage { position: relative; min-height: 180px; flex: 1 1 auto; background: oklch(0.17 0.008 155); isolation: isolate; }
 .map-stage > .map-loading { position: absolute; inset: 0; z-index: 1; min-height: 0; }
 .map-experience .map-toolbar { top: 10px; left: 10px; right: 10px; align-items: flex-start; }
@@ -43,4 +44,8 @@
   .map-coverage { padding: 7px 10px 4px; }
   .map-experience .map-legend { padding: 2px 10px 8px; }
   .map-projection-note { bottom: 32px; }
+}
+@media (max-width: 700px) {
+  /* The compact shell hides generic camera hints, not missing-boundary facts. */
+  .sextet-app .map-camera-note.map-camera-scope-note { display: block; }
 }

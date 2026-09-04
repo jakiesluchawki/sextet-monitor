@@ -6,7 +6,7 @@ product
 
 ## Users
 
-Members of a small group inspecting shared public-source records on desktop and mobile. A separate private installation retains local queries, briefings and history. The approved brief prioritizes Poland, Europe, Turkey and major global disruptions. This is an operational view, not marketing.
+Members of a small group inspecting shared public-source records on desktop and mobile. A separate private installation retains local queries, briefings and history. The shared defaults are world, Europe and Poland; members choose other countries and browser-local favorites themselves. No other country is singled out by default. This is an operational view, not marketing.
 
 ## Product Purpose
 

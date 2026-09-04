@@ -1,17 +1,37 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Geometry } from "geojson";
+import type { FeatureCollection, Geometry } from "geojson";
 import type { EventSummary } from "../lib/contracts";
 import { DEFAULT_QUERY } from "../lib/filters";
 import EventMap from "../components/EventMap";
-import { cameraAnimationDuration, geometryCameraBounds, mapGeometryCoverage, worldCameraResizeZoom, worldCameraZoom } from "../lib/map-camera";
+import { cameraAnimationDuration, countryCameraTarget, geometryCameraBounds, loadCountryBoundaries, mapGeometryCoverage, naturalEarthCountryGeometries, worldCameraResizeZoom, worldCameraZoom } from "../lib/map-camera";
 
 const point = (longitude: number, latitude: number): Geometry => ({type:"Point",coordinates:[longitude,latitude]});
 function event(id:string,geometry:Geometry|null):EventSummary {
-  return {id,geometry,category:"earthquake",title:id,severity:0} as EventSummary;
+  return {id,geometry,countries:[] as string[],category:"earthquake",title:id,severity:0} as EventSummary;
 }
+const naturalEarth=JSON.parse(readFileSync(new URL("../public/maps/countries.geojson",import.meta.url),"utf8")) as FeatureCollection;
+
+test("country boundary reads keep original data and fail safely on exceptions",async()=>{
+  assert.equal(await loadCountryBoundaries(()=>Promise.resolve(naturalEarth)),naturalEarth);
+  assert.equal(await loadCountryBoundaries(()=>Promise.reject(new Error("read failed"))),null);
+  assert.equal(await loadCountryBoundaries(()=>{throw new Error("source unavailable");}),null);
+});
+
+test("a hung boundary read settles to fallback and ignores a late response",{timeout:5_000},async()=>{
+  let deliver:((value:FeatureCollection)=>void)|undefined;
+  const pending=new Promise<FeatureCollection>((resolve)=>{deliver=resolve;});
+  let completions=0;
+  const result=loadCountryBoundaries(()=>pending,5).then((value)=>{completions++;return value;});
+  assert.equal(await result,null);
+  deliver!(naturalEarth);
+  await Promise.resolve();
+  assert.equal(completions,1);
+  assert.equal(await result,null);
+});
 
 test("camera does not invent geometry or a location for unknown and invalid positions",()=>{
   assert.equal(geometryCameraBounds([null]),null);
@@ -83,7 +103,7 @@ test("all camera animation paths can respect reduced motion and tiny viewports s
 test("resize fits only the explicitly selected globe world view and leaves user navigation intact",()=>{
   assert.equal(worldCameraResizeZoom("globe","world",600,250),worldCameraZoom(600,250));
   assert.ok(worldCameraResizeZoom("globe","world",600,320)!>worldCameraResizeZoom("globe","world",390,180)!);
-  for(const preset of [null,"poland","europe","turkey"]){
+  for(const preset of [null,"poland","europe","country:TR"]){
     assert.equal(worldCameraResizeZoom("globe",preset,390,180),null);
   }
   assert.equal(worldCameraResizeZoom("mercator","world",600,250),null);
@@ -92,14 +112,67 @@ test("resize fits only the explicitly selected globe world view and leaves user 
   }
 });
 
+test("country cameras read original Natural Earth ISO fields, including EH fallbacks",()=>{
+  for(const code of ["PL","TR","NO","FR","XK"]){
+    const geometries=naturalEarthCountryGeometries(naturalEarth,code);
+    assert.ok(geometries.length>0,code);
+    assert.ok(geometries.every((geometry)=>naturalEarth.features.some((feature)=>feature.geometry===geometry)),code);
+  }
+  const france=geometryCameraBounds(naturalEarthCountryGeometries(naturalEarth,"FR"))!;
+  assert.ok(france[0][0]<-50,"the original French boundary retains French Guiana rather than clipping to Europe");
+  const sierraLeone=naturalEarthCountryGeometries(naturalEarth,"SL");
+  assert.ok(sierraLeone.length>0);
+  assert.ok(sierraLeone.every((geometry)=>naturalEarth.features.find((feature)=>feature.geometry===geometry)?.properties?.NAME==="Sierra Leone"));
+  assert.deepEqual(naturalEarthCountryGeometries(naturalEarth,"-99"),[]);
+});
+
+test("a valid primary ISO code wins; postal labels and label coordinates never create boundaries",()=>{
+  const polygon:Geometry={type:"Polygon",coordinates:[[[10,10],[11,10],[11,11],[10,10]]]};
+  const data:FeatureCollection={type:"FeatureCollection",features:[
+    {type:"Feature",properties:{ISO_A2:"PL",ISO_A2_EH:"DE"},geometry:polygon},
+    {type:"Feature",properties:{ISO_A2:"-99",ISO_A2_EH:"-99",POSTAL:"MT",LABEL_X:14.4,LABEL_Y:35.9},geometry:polygon},
+    {type:"Feature",properties:{ISO_A2:"SG"},geometry:point(103.8,1.3)},
+  ]};
+  assert.deepEqual(naturalEarthCountryGeometries(data,"PL"),[polygon]);
+  for(const code of ["DE","MT","SG"])assert.deepEqual(naturalEarthCountryGeometries(data,code),[],code);
+});
+
+test("available country boundaries take precedence over record coordinates without changing either",()=>{
+  const records=[{...event("poland",point(21,52)),countries:["PL"]}];
+  const before=JSON.stringify(records);
+  const target=countryCameraTarget("PL",naturalEarth,records,"globe");
+  assert.equal(target.kind,"boundary");
+  assert.deepEqual(target.bounds,geometryCameraBounds(naturalEarthCountryGeometries(naturalEarth,"PL"),"globe"));
+  assert.notDeepEqual(target.bounds,[[21,52],[21,52]]);
+  assert.equal(JSON.stringify(records),before);
+});
+
+test("missing country boundaries fall back only to qualifying records, otherwise explicitly to world",()=>{
+  assert.equal(naturalEarthCountryGeometries(naturalEarth,"MT").length,0,"Malta is absent from this low-resolution basemap");
+  const malta={...event("malta",point(14.4,35.9)),countries:["MT"]};
+  const other={...event("poland",point(21,52)),countries:["PL"]};
+  assert.deepEqual(countryCameraTarget("MT",naturalEarth,[other,malta],"globe"),{kind:"records",bounds:[[14.4,35.9],[14.4,35.9]],projection:"globe"});
+  assert.deepEqual(countryCameraTarget("MT",naturalEarth,[other,{...malta,geometry:null}],"globe"),{kind:"world",bounds:null,projection:"globe"});
+  assert.deepEqual(countryCameraTarget("MT",null,[],"mercator"),{kind:"world",bounds:null,projection:"mercator"});
+});
+
+test("a country spanning opposing hemispheres switches to 2D to retain its entire original boundary",()=>{
+  const target=countryCameraTarget("RU",naturalEarth,[],"globe");
+  assert.equal(target.kind,"boundary");
+  assert.equal(target.projection,"mercator");
+  assert.deepEqual(target.bounds,geometryCameraBounds(naturalEarthCountryGeometries(naturalEarth,"RU"),"mercator"));
+});
+
 test("map controls explicitly separate camera from filters and keep unknown records accessible",()=>{
   const html=renderToStaticMarkup(React.createElement(EventMap,{
     events:[event("unknown",null)],query:DEFAULT_QUERY,selectedId:"unknown",onSelect:()=>undefined,onFallback:()=>undefined,
   }));
   assert.match(html,/Położenie kamery nie zmienia filtrów/);
-  for(const label of ["Świat","Europa","Polska","Turcja","Dopasuj wynik","Wybrany rekord","Globus","Mapa 2D"])assert.ok(html.includes(label),label);
+  for(const label of ["Świat","Europa","Polska","Dopasuj wynik","Wybrany rekord","Globus","Mapa 2D"])assert.ok(html.includes(label),label);
+  assert.doesNotMatch(html,/>Turcja</);
   assert.match(html,/Geometria: 0 \/ 1 rekordów/);
   assert.match(html,/1 bez geometrii, zobacz listę/);
   assert.match(html,/Wybrany rekord: brak geometrii źródłowej/);
   assert.match(html,/data-map-status="loading"/);
+  assert.match(html,/data-map-projection="mercator"/);
 });

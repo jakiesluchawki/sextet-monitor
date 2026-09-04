@@ -15,11 +15,11 @@ Map style uses explicit sRGB equivalents because MapLibre expressions are not CS
 
 ## Structure
 
-Public navigation has three views: overview, exploration and briefing. A shared rail chooses world, Europe, Poland or Turkey and a 24-hour, 72-hour or 7-day window. The header shows the publication clock and source health; evidence and source details open separately from the main task.
+Public navigation has three views: overview, exploration and briefing. A shared rail chooses world, Europe, Poland or an explicit country/territory and a 24-hour, 72-hour or 7-day window. A native country select offers ISO alpha-2 codes plus XK; the member can keep up to eight favorite areas only in this browser. Labels and sorting appear after hydration. Turkey has no special shortcut; historical turkey hashes still restore its country filter. The header shows the publication clock and source health; evidence and source details open separately from the main task.
 
 The overview pairs a globe with up to eight rule-selected records and their selection reasons. It also exposes a timeline and an accessible table with exact interval counts. Exploration pairs literal search and source/category filters with progressively loaded records and a map. A narrow screen keeps records available and lets the user reveal the map. Evidence can be opened from either representation.
 
-The overview and timeline calculate over the complete matching public set. The map deliberately uses at most 500 matching records and states that boundary; the exploration list makes the full result available in batches. Missing geometry never becomes a centroid or invented point. Globe/2D selection and camera presets alter presentation, not event geography or scope filters. The list remains the complete alternative when WebGL fails.
+The overview and timeline calculate over the complete matching public set. The map deliberately uses at most 500 matching records and states that boundary; the exploration list makes the full result available in batches. Missing geometry never becomes a centroid or invented point. Globe/2D selection and camera presets alter presentation, not event geography or scope filters. Choosing a country updates the data scope and frames its local underlay boundary. Missing boundaries fall back to actual matching event geometry, or a world view with an explicit message when neither is available. The list remains the complete alternative when WebGL fails.
 
 The older exact-filter workflow remains in `DetailedExplorer`; its map, list and timeline still consume the same bounded response. The private workspace keeps its existing API workflow and is not replaced by the public edition.
 
@@ -39,7 +39,7 @@ Star controls keep at most 30 public UUIDs in this browser. Briefing management 
 
 Briefings use the monitor's selection or in-scope pins, with a 12-record cap, source links, dates and limitations. Copying prepares text for a user to paste into Signal; it never sends a message. Markdown download and browser print/PDF are explicit actions. A clipboard failure exposes selectable text.
 
-Shared hashes carry approved public view settings and an optional public event ID. They do not carry local pins or baseline state. Links open the latest available publication, so an old ID may no longer exist; the detail panel must say so rather than invent an archive. No cloud AI or private API backs these public interactions.
+Shared hashes carry approved public view settings and an optional public event ID. They do not carry local pins, favorite areas or baseline state. Links open the latest available publication, so an old ID may no longer exist; the detail panel must say so rather than invent an archive. No cloud AI or private API backs these public interactions.
 
 ## Truthful states
 

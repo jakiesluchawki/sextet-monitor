@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FeatureCollection, Polygon } from "geojson";
+import type { FeatureCollection, GeoJSON, Polygon } from "geojson";
 import type { ExpressionSpecification, GeoJSONSource, Map as LibreMap, Marker, Popup, StyleSpecification } from "maplibre-gl";
 import type { EventQuery, EventSummary } from "@/lib/contracts";
 import { eventsToGeoJson, positionsOf } from "@/lib/map-data";
 import { CATEGORY_SHORT } from "@/lib/filters";
 import { assetPath } from "@/lib/assets";
-import { CAMERA_PRESETS, cameraAnimationDuration, geometryCameraBounds, mapGeometryCoverage, worldCameraResizeZoom, worldCameraZoom, type CameraBounds, type CameraScope, type MapProjection } from "@/lib/map-camera";
+import { getScopeLabel, normalizeScopeId, scopeCountryCode } from "@/lib/areas";
+import { CAMERA_PRESETS, cameraAnimationDuration, countryCameraTarget, geometryCameraBounds, loadCountryBoundaries, mapGeometryCoverage, worldCameraResizeZoom, worldCameraZoom, type CameraBounds, type CameraScope, type MapProjection } from "@/lib/map-camera";
 import { Icon } from "./Icon";
 
 const EMPTY: FeatureCollection = {type:"FeatureCollection",features:[]};
@@ -65,23 +66,27 @@ export function mappedCategories(events:EventSummary[]) {
 export default function EventMap({events,query,selectedId,onSelect,onFallback,initialProjection="mercator",cameraScope}:{events:EventSummary[];query:EventQuery;selectedId:string|null;onSelect:(id:string)=>void;onFallback:()=>void;initialProjection?:MapProjection;cameraScope?:CameraScope}){
   const container=useRef<HTMLDivElement>(null);
   const mapRef=useRef<LibreMap|null>(null);
+  const countryBoundariesRef=useRef<GeoJSON|null>(null);
   const latest=useRef({events,query,selectedId,onSelect});
   latest.current={events,query,selectedId,onSelect};
   const [ready,setReady]=useState(false);
   const [failure,setFailure]=useState<string|null>(null);
   const [warning,setWarning]=useState<string|null>(null);
   const [projection,setProjection]=useState<MapProjection>(initialProjection);
+  const [scopeCameraNote,setScopeCameraNote]=useState<string|null>(null);
   const [cameraPreset,setCameraPreset]=useState<string|null>(initialProjection==="globe"?"world":null);
   const cameraPresetRef=useRef<string|null>(initialProjection==="globe"?"world":null);
   const chooseCameraPreset=useCallback((preset:string|null)=>{
     cameraPresetRef.current=preset;
     setCameraPreset(preset);
+    setScopeCameraNote(null);
   },[]);
   const [cameraNotice,setCameraNotice]=useState("");
   const categories=useMemo(()=>mappedCategories(events),[events]);
   const coverage=useMemo(()=>mapGeometryCoverage(events),[events]);
   const selected=useMemo(()=>events.find((event)=>event.id===selectedId) ?? null,[events,selectedId]);
   const selectedHasGeometry=!!selected && positionsOf(selected.geometry).length>0;
+  const resolvedCameraScope=normalizeScopeId(cameraScope);
 
   useEffect(()=>{
     let disposed=false;
@@ -208,9 +213,22 @@ export default function EventMap({events,query,selectedId,onSelect,onFallback,in
         }
         map.on("idle",renderClusters);
         map.on("moveend",renderClusters);
-        loaded=true;window.clearTimeout(loadDeadline);
-        resizeMap();
-        setReady(true);
+        loaded=true;
+        window.clearTimeout(loadDeadline);
+        const finishReady=(data:GeoJSON|null)=>{
+          if(disposed || failed)return;
+          countryBoundariesRef.current=data;
+          window.clearTimeout(loadDeadline);
+          resizeMap();
+          setReady(true);
+        };
+        // Read the complete original basemap already loaded by MapLibre. Using
+        // rendered features here would truncate countries to the current view.
+        // Resolve before scope/selection effects so no late fit overrides a
+        // deep link or a camera moved by the reader. This makes no new fetch.
+        const source=map.getSource("countries") as GeoJSONSource|undefined;
+        if(source)void loadCountryBoundaries(()=>source.getData()).then(finishReady);
+        else finishReady(null);
       });
       map.on("movestart",(event)=>{if(event.originalEvent)chooseCameraPreset(null);});
       map.on("error",(event)=>{
@@ -237,19 +255,41 @@ export default function EventMap({events,query,selectedId,onSelect,onFallback,in
   },[ready,events,query]);
   useEffect(()=>{const map=mapRef.current;if(ready && map)updateSelection(map,selectedId);},[ready,selectedId]);
 
-  // The geographic scope is a data filter owned by the parent. Move once when
-  // it changes, but do not force that camera again after manual navigation.
-  // This effect precedes selected-record focus so a deep link still wins.
-  useEffect(()=>{
+  const aimScopeCamera=useCallback((requested:CameraScope,scopeChanged:boolean)=>{
     const map=mapRef.current;
-    if(!ready || !map || !cameraScope)return;
-    const preset=CAMERA_PRESETS.find((item)=>item.id===cameraScope);
+    if(!ready || !map)return;
+    const scope=normalizeScopeId(requested);
+    if(!scope){setScopeCameraNote("Nie rozpoznano zakresu kamery. Zachowano bieżący widok.");return;}
+    const label=getScopeLabel(scope);
+    const countryCode=scopeCountryCode(scope);
+    if(countryCode){
+      const mode=map.getProjection().type==="globe"?"globe":"mercator";
+      const target=countryCameraTarget(countryCode,countryBoundariesRef.current,latest.current.events,mode);
+      if(target.projection!==mode){map.setProjection({type:target.projection});setProjection(target.projection);}
+      chooseCameraPreset(target.kind==="world"?"world":scope);
+      if(target.bounds)fitCamera(map,target.bounds);
+      else worldCamera(map);
+      const note=target.kind==="boundary"?`${label}: granica Natural Earth, orientacyjna. Kamera nie zmienia filtrów.`
+        :target.kind==="records"?`${label}: brak dostępnej granicy w podkładzie. Kadr obejmuje geometrie rekordów, nie cały kraj.`
+        :`${label}: brak dostępnej granicy i geometrii rekordów. Pokazano świat, bez zastępczego punktu.`;
+      setScopeCameraNote(note);
+      setCameraNotice(note);
+      return;
+    }
+    const preset=CAMERA_PRESETS.find((item)=>item.id===scope);
     if(!preset)return;
     chooseCameraPreset(preset.id);
     if(preset.bounds)fitCamera(map,preset.bounds);
     else worldCamera(map);
-    setCameraNotice(`Kamera ustawiona dla zakresu: ${preset.label}. Możesz ją przesuwać bez zmiany filtrów.`);
-  },[ready,cameraScope,chooseCameraPreset]);
+    setCameraNotice(scopeChanged?`Kamera ustawiona dla zakresu: ${label}. Możesz ją przesuwać bez zmiany filtrów.`:`Kamera: ${label}. Filtry i liczba rekordów bez zmian.`);
+  },[ready,chooseCameraPreset]);
+
+  // The geographic scope is a data filter owned by the parent. Move once when
+  // it changes, but do not force that camera again after manual navigation.
+  // This effect precedes selected-record focus so a deep link still wins.
+  useEffect(()=>{
+    if(ready && resolvedCameraScope)aimScopeCamera(resolvedCameraScope,true);
+  },[ready,resolvedCameraScope,aimScopeCamera]);
 
   const focusSelected=useCallback(()=>{
     const map=mapRef.current;
@@ -287,11 +327,7 @@ export default function EventMap({events,query,selectedId,onSelect,onFallback,in
     setCameraNotice(broad?"Kamera: cały wynik w 2D. Globus nie pokazuje obu półkul jednocześnie.":"Kamera: geometrie wszystkich wyświetlanych rekordów.");
   };
   const showPreset=(preset:typeof CAMERA_PRESETS[number])=>{
-    const map=mapRef.current;if(!map)return;
-    chooseCameraPreset(preset.id);
-    if(preset.bounds)fitCamera(map,preset.bounds);
-    else worldCamera(map);
-    setCameraNotice(`Kamera: ${preset.label}. Filtry i liczba rekordów bez zmian.`);
+    aimScopeCamera(preset.id,false);
   };
   const switchProjection=(next:MapProjection)=>{
     const map=mapRef.current;if(!map || next===projection)return;
@@ -308,7 +344,7 @@ export default function EventMap({events,query,selectedId,onSelect,onFallback,in
     <div className="map-camera-controls">
       <div className="map-camera-presets" role="group" aria-label="Położenie kamery, bez zmiany filtrów"><span className="map-camera-label">Kamera</span>{CAMERA_PRESETS.map((preset)=><button type="button" key={preset.id} disabled={!ready} aria-pressed={cameraPreset===preset.id} onClick={()=>showPreset(preset)}>{preset.label}</button>)}</div>
       <div className="map-camera-actions"><button type="button" onClick={fit} disabled={!ready || !coverage.mapped}><Icon name="map" size={14}/>Dopasuj wynik</button><button type="button" onClick={focusSelected} disabled={!ready || !selectedHasGeometry} title={selected && !selectedHasGeometry?"Wybrany rekord nie ma geometrii źródłowej":undefined}>Wybrany rekord</button></div>
-      <span className="map-camera-note">Położenie kamery nie zmienia filtrów.</span>
+      <span className={`map-camera-note ${scopeCameraNote?"map-camera-scope-note":""}`} role={scopeCameraNote?"status":undefined}>{scopeCameraNote || "Położenie kamery nie zmienia filtrów."}</span>
     </div>
     <div className="map-stage">
       <div ref={container} className="map-canvas"/>

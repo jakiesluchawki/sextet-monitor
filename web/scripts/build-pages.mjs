@@ -15,9 +15,9 @@ const sourceFiles = [
   "app/globals.css",
   "app/sextet.css",
   "components/map-experience.css",
-  ...["PublicMonitor", "DetailedExplorer", "SituationOverview", "SignalRows", "EventMap", "EventList", "EventEvidence", "FilterPanel", "SourcePanel", "Icon"]
+  ...["PublicMonitor", "CountryPicker", "DetailedExplorer", "SituationOverview", "SignalRows", "EventMap", "EventList", "EventEvidence", "FilterPanel", "SourcePanel", "Icon"]
     .map((name) => `components/${name}.tsx`),
-  ...["public-snapshot", "public-session", "public-view", "situation", "map-camera", "assets", "contracts", "filters", "format", "map-data", "countries"]
+  ...["areas", "public-snapshot", "public-session", "public-view", "situation", "map-camera", "assets", "contracts", "filters", "format", "map-data", "countries"]
     .map((name) => `lib/${name}.ts`),
 ];
 const publicFiles = [

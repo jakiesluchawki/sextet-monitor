@@ -6,7 +6,7 @@ Polish interfaces for two separate runtimes: the local Phase 1 API application a
 
 `PublicMonitor` reads the same-origin `snapshot.json` through the bounded public validator. It does not import the private API client or use the local database. `npm run build:pages` exports only the allowlisted public components, utilities and assets into `.pages-build/out`; the default base path is `/sextet-monitor`. Preparation and publication are documented in [PUBLIC_PAGES](../PUBLIC_PAGES.md). A successful export does not prove that production has been deployed.
 
-The public interface has overview, exploration and briefing views. `situation.ts` evaluates world/Europe/Poland/Turkey and the 24-hour, 72-hour and 7-day windows at `snapshot.generated_at`. Europe is an explicit list of source country codes, including Cyprus and Kosovo but not Russia or Turkey; neither this filter nor the country scopes are spatial intersections. Unknown-country records and global services are not automatically assigned to a region.
+The public interface has overview, exploration and briefing views. `situation.ts` evaluates world/Europe/Poland or a validated country/territory and the 24-hour, 72-hour and 7-day windows at `snapshot.generated_at`. Europe is an explicit list of source country codes, including Cyprus and Kosovo but not Russia or Turkey; neither this filter nor the country scopes are spatial intersections. Unknown-country records and global services are not automatically assigned to a region.
 
 Occurrence start, publication and validity overlap remain separate by category. Device time updates age warnings, not the data window. Day-precision records and advisories can occur in several timeline intervals; the accessible table and labels explain that totals across intervals are not unique incidents. Overview highlights choose up to eight representatives using disclosed source/date rules, not AI or a risk score.
 
@@ -14,10 +14,11 @@ Occurrence start, publication and validity overlap remain separate by category. 
 
 ### Browser-local state and links
 
-`public-session.ts` owns the following versioned, bounded storage entries:
+`public-session.ts` and `areas.ts` own the following versioned, bounded storage entries:
 
 | Key | Contents | Boundary |
 |---|---|---|
+| `sextet.public.areas.v1` | ISO alpha-2 country codes plus XK | At most eight favorites and 1 KiB; no names, coordinates or history |
 | `sextet.public.watch.v1` | Public UUIDs and last-write timestamp | At most 30 pins; no titles, text or geometry |
 | `sextet.public.baseline.v1` | Publication timestamp and UUID/content-fingerprint pairs | At most 10,000 entries and 1 MiB; no full events, evidence payloads or URLs |
 
@@ -25,7 +26,7 @@ Baseline fingerprints are compact, non-cryptographic summaries of selected sourc
 
 Comparison reports first visit, same publication, newer publication or out-of-order publication. “Added” means new to these two public sets, not a confirmed new incident. “Missing” is not “resolved”; source windows, caps and grouping can remove a record. This is a two-set comparison, not full source history. Browser storage may be blocked, exhausted or cleared. Cross-tab storage notifications re-read current storage rather than replaying a stale event value; `localStorage` still offers no atomic cross-tab transaction or device synchronization. Briefing pin management includes unavailable records so their slots can be released.
 
-Shared hashes contain approved scope/window/view/filter/search fields and an optional validated public event UUID, within a 2,048-character limit. `buildShareUrl` strips the previous query/hash and rejects non-HTTP(S) or credential-bearing base addresses. Explicit search text becomes part of the link; do not put secrets into search. Links open the latest available public set, not an immutable snapshot, and carry neither pins nor baseline. State restoration happens after mounting to preserve deterministic SSR output.
+Shared hashes contain approved scope/window/view/filter/search fields and an optional validated public event UUID, within a 2,048-character limit. `buildShareUrl` strips the previous query/hash and rejects non-HTTP(S) or credential-bearing base addresses. Explicit search text becomes part of the link; do not put secrets into search. Links open the latest available public set, not an immutable snapshot, and carry neither pins, favorite areas nor baseline. Country scopes use `country:XX`; the legacy `turkey` value is restored as `country:TR`, and `country:PL` becomes `poland`. State restoration happens after mounting to preserve deterministic SSR output.
 
 ### Briefing and map behavior
 
@@ -57,6 +58,6 @@ The private API briefing button always uses 24 hours plus the selected country. 
 
 MapLibre 6 module workers are prepared by npm run prepare:map (also predev/prebuild/pretest). It copies the pinned package's worker, relative shared module and full license notice unchanged to public/maplibre/. The application sets this same-origin worker URL explicitly; webpack's build-time import.meta.url is not a browser worker URL. No CDN or blob worker is needed. A map that cannot initialize within 20 seconds becomes an explicit list fallback; data-map-status exposes loading/ready/failed for browser checks.
 
-The private proxy's allowed browser origins are strictly `http://localhost:3180` and `http://127.0.0.1:3180`, with a matching Host. The internal container URL/port and forwarded headers do not authorize POSTs. Origin-less local GET health checks still work. These POST rules do not expose a private API on GitHub Pages. Country labels are shared static Polish strings to avoid server/browser ICU hydration differences; unmapped codes remain codes.
+The private proxy's allowed browser origins are strictly `http://localhost:3180` and `http://127.0.0.1:3180`, with a matching Host. The internal container URL/port and forwarded headers do not authorize POSTs. Origin-less local GET health checks still work. These POST rules do not expose a private API on GitHub Pages. Existing event labels remain shared static Polish strings. The public country picker uses an explicit validated code list with browser-local Polish Intl labels and sorting only after hydration; unsupported labels fall back to static names or codes.
 
 The Czas fieldset includes the keyboard-accessible Koniec okna number stepper (0–168 hours back, 1-hour increments). A past position writes since/until in UTC to the same EventQuery used by the map, list and timeline, preserving an existing absolute range width or the selected window_hours. Teraz clears the absolute bounds. Warsaw timestamps are visible below the control; current time is read only when the user changes it, never during SSR.

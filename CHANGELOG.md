@@ -1,5 +1,12 @@
 # Zmiany
 
+## 0.2.1 — 5.09.2026
+
+- Stałe skróty to świat, Europa i Polska. Pozostałe kraje i terytoria wybiera się z podpisanej listy; Turcja nie jest już wyróżniona. Do ośmiu własnych ulubionych obszarów pozostaje w tej przeglądarce, z obsługą zmian między kartami i błędów zapisu.
+- Kraj filtruje rzeczywiste kody źródłowe, również w briefingu i udostępnianym linku. `scope=turkey` zachowuje zgodność, przechodząc na `country:TR`. Nieznane kody są odrzucane; wybór kraju nie dodaje nowych źródeł ani nie przypisuje mu globalnych komunikatów.
+- Kamera wykorzystuje lokalne granice wybranego kraju, a gdy ich brakuje, rzeczywistą geometrię pasujących zapisów. Brak obu oznacza jawny widok świata, bez wymyślonych współrzędnych.
+- Nadal dziewięć dotychczasowych kanałów. Badanie kandydatów na nowe źródła nie oznacza ich podłączenia. Publikacja wymaga osobnego sprawdzenia artefaktu i przeglądarki.
+
 ## 02 — 5.09.2026
 
 Zakres zmian w kodzie publicznego interfejsu. Ten wpis nie potwierdza jeszcze publikacji na produkcji. Pozostaje dziewięć dotychczasowych kanałów danych; nie dodano źródeł, prywatnego API ani usług AI.

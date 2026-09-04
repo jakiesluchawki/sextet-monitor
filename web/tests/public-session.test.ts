@@ -63,7 +63,7 @@ test("shared parsing accepts no implicit dates, private sources, unknown enum va
     scope: "europe", hours: 168, view: "briefing", category: "space_weather", sourceId: "noaa_swpc",
   });
   assert.deepEqual(parseSharedView(`#eventId=${id(11).toUpperCase()}`), { eventId: id(11) });
-  assert.deepEqual(parseSharedView("#hours=024&scope=turkey"), { scope: "turkey" });
+  assert.deepEqual(parseSharedView("#hours=024&scope=turkey"), { scope: "country:TR" });
 });
 
 test("malformed, ambiguous and oversized shared hashes fail closed", () => {
@@ -90,6 +90,28 @@ test("share URLs strip existing query and fragment instead of forwarding credent
   for (const url of ["javascript:alert(1)", "data:text/html,hello", "file:///private/file", "https://user:password@example.invalid/", "//example.invalid/", "/relative"]) {
     assert.throws(() => buildShareUrl(url, {}));
   }
+});
+
+test("shared countries round-trip with canonical codes and migrate old Turkey or duplicate Poland scopes", () => {
+  for (const scope of ["country:JP", "country:FR", "country:TR", "country:XK", "country:GP"] as const) {
+    const view: SharedView = { scope, hours: 72, view: "overview" };
+    assert.deepEqual(parseSharedView(serializeSharedView(view)), view);
+    assert.ok(serializeSharedView(view).includes("country%3A"));
+  }
+  assert.deepEqual(parseSharedView("#scope=country%3Atr&view=explore"), { scope: "country:TR", view: "explore" });
+  assert.deepEqual(parseSharedView("#scope=turkey&hours=24"), { scope: "country:TR", hours: 24 });
+  assert.deepEqual(parseSharedView("#scope=country%3Apl&hours=24"), { scope: "poland", hours: 24 });
+  assert.equal(serializeSharedView({ scope: "country:PL" }), "#scope=poland");
+  assert.equal(serializeSharedView({ scope: "turkey" } as unknown as SharedView), "#scope=country%3ATR");
+});
+
+test("country links reject unsupported, aggregate, malformed and injected codes without forwarding favorites", () => {
+  for (const scope of ["country:ZZ", "country:EU", "country:UN", "country:UK", "country:XA", "country:US-CA", "country:__proto__", "country:PL,TR", "country:PL\n"]) {
+    assert.deepEqual(parseSharedView(`#scope=${encodeURIComponent(scope)}&hours=24`), { hours: 24 }, scope);
+    assert.equal(serializeSharedView({ scope } as SharedView), "", scope);
+  }
+  assert.deepEqual(parseSharedView("#scope=country%3AJP&favorites=TR,FR&country=PL"), { scope: "country:JP" });
+  assert.equal(buildShareUrl("https://example.invalid/?favorites=PL,TR#scope=turkey", { scope: "country:JP" }), "https://example.invalid/#scope=country%3AJP");
 });
 
 test("watch persistence contains only bounded public UUID selection and schema metadata", () => {

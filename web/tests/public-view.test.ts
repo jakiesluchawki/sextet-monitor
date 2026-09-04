@@ -5,6 +5,34 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { EventDetail } from "../lib/contracts";
 import { eventSourceNames, filterViewEvents, snapshotCalendarDay } from "../lib/public-view";
 import SignalRows, { PinButton } from "../components/SignalRows";
+import CountryPicker from "../components/CountryPicker";
+
+test("country picker defers region labels until hydration and offers a labeled native selection", () => {
+  const props = { scope: "world" as const, favorites: [], onScopeChange: () => undefined, onToggleFavorite: () => undefined };
+  const pending = renderToStaticMarkup(React.createElement(CountryPicker, { ...props, ready: false }));
+  assert.match(pending, /<label for="scope-country">Wybierz kraj<\/label>/);
+  assert.match(pending, /<select[^>]*disabled=""/);
+  assert.doesNotMatch(pending, /value="TR"|value="US"/);
+  const ready = renderToStaticMarkup(React.createElement(CountryPicker, { ...props, ready: true, scope: "country:UA" }));
+  assert.match(ready, /<option value="UA" selected="">Ukraina<\/option>/);
+  assert.match(ready, /<option value="TR">Turcja<\/option>/);
+  assert.match(ready, /Dodaj do ulubionych: Ukraina/);
+  assert.match(ready, /Nie zwiększa ich zasięgu/);
+  assert.match(ready, /Ulubione tylko w tej przeglądarce/);
+});
+
+test("country favorites have distinct accessible selection and removal actions and a bounded add control", () => {
+  const favorites = ["UA", "DE", "GB", "US", "JP", "FR", "ES", "IT"];
+  const props = { ready: true, favorites, onScopeChange: () => undefined, onToggleFavorite: () => undefined };
+  const current = renderToStaticMarkup(React.createElement(CountryPicker, { ...props, scope: "country:UA" }));
+  assert.match(current, /aria-label="Obszar: Ukraina" aria-pressed="true"/);
+  assert.match(current, /class="favorite-area-remove" aria-label="Usuń z ulubionych: Ukraina"/);
+  assert.match(current, /country-favorite-toggle"[^>]*aria-pressed="true"[^>]*>/);
+  assert.doesNotMatch(current, /country-favorite-toggle"[^>]*disabled/);
+  const full = renderToStaticMarkup(React.createElement(CountryPicker, { ...props, scope: "country:TR" }));
+  assert.match(full, /country-favorite-toggle"[^>]*aria-pressed="false"[^>]*disabled=""/);
+  assert.match(full, /Usuń jeden ulubiony obszar, aby dodać kolejny/);
+});
 
 test("snapshot stamp and export day follow Warsaw across UTC midnight and seasonal offsets",()=>{
   assert.equal(snapshotCalendarDay("2026-09-04T22:49:00Z"),"2026-09-05");

@@ -2,17 +2,9 @@ import type { Category, EventDetail, SourceStatus, TimeBasis } from "./contracts
 import { countryName, formatDate, formatEventDate, KIND_LABELS, safeHttpUrl, STATE_LABELS } from "./format";
 import { positionsOf } from "./map-data";
 import { PUBLIC_SOURCE_IDS, PUBLIC_SOURCE_INFO, PUBLIC_TIME_BASIS, type PublicSnapshot } from "./public-snapshot";
+import { getScopeCountries, getScopeLabel, normalizeScopeId, type ScopeId } from "./areas";
 
-export type ScopeId = "world" | "europe" | "poland" | "turkey";
-export const scopeLabel: Readonly<Record<ScopeId, string>> = Object.freeze({
-  world: "Świat", europe: "Europa", poland: "Polska", turkey: "Turcja",
-});
-/** Same explicit country set as the private query service; not a geometric continent. */
-export const scopeCountries: Readonly<Record<ScopeId, readonly string[] | null>> = Object.freeze({
-  world: null,
-  europe: Object.freeze("AL AD AT BE BA BG BY CH CY CZ DE DK EE ES FI FR GB GR HR HU IE IS IT LI LT LU LV MC MD ME MK MT NL NO PL PT RO RS SE SI SK SM UA VA XK".split(" ")),
-  poland: Object.freeze(["PL"]), turkey: Object.freeze(["TR"]),
-});
+export type { ScopeId } from "./areas";
 export const SITUATION_CATEGORIES: readonly Category[] = Object.freeze([
   "earthquake", "disaster", "weather", "aviation", "cyber", "internet", "space_weather",
 ]);
@@ -166,13 +158,14 @@ function chooseHighlights(events: EventDetail[], snapshot: PublicSnapshot, since
 
 /** Selection is deterministic. `now` affects only freshness warnings, never the data window. */
 export function buildSituation(snapshot: PublicSnapshot, options: { scope: ScopeId; hours: number; now?: number }): Situation {
-  if (!Object.hasOwn(scopeLabel, options.scope)) throw new Error("Nieznany zakres sytuacji.");
+  const scope = normalizeScopeId(options.scope);
+  if (!scope) throw new Error("Nieznany zakres sytuacji.");
   if (!Number.isInteger(options.hours) || options.hours < 1 || options.hours > 720) throw new Error("Okno sytuacji musi obejmować od 1 do 720 godzin.");
   const until = instant(snapshot.generated_at);
   if (until === null) throw new Error("Nieprawidłowy czas przygotowania zestawu.");
   const now = options.now ?? until;
   if (!Number.isFinite(now)) throw new Error("Nieprawidłowy zegar odniesienia.");
-  const since = until - options.hours * HOUR, countries = scopeCountries[options.scope];
+  const since = until - options.hours * HOUR, countries = getScopeCountries(scope);
   const inRegion = (event: EventDetail) => countries === null || event.countries.some((country) => countries.includes(country));
   const regional = snapshot.events.filter(inRegion);
   const unknownTimeCount = regional.filter((event) => eventSpan(event) === null).length;
@@ -221,8 +214,8 @@ export function buildSituation(snapshot: PublicSnapshot, options: { scope: Scope
     "Wyróżnienia pomijają powtarzające się tytuły w tej samej kategorii i krajach oraz raporty z jawną relacją możliwego tego samego zdarzenia. Nie scala to rekordów ani nie potwierdza ich tożsamości.",
     "Liczba kanałów i adresów nie jest liczbą niezależnych potwierdzeń. Agregatory mogą wskazywać te same dane pierwotne.",
   ];
-  if (countries !== null) limitations.push(`Zakres ${scopeLabel[options.scope]} filtruje wyłącznie jawne kody krajów w źródle. ${unknownCountryCount} rekordów z tego okna bez kraju pominięto; globalne usługi i komunikaty nie są automatycznie przypisywane do regionu.`);
-  if (options.scope === "europe") limitations.push("Europa to jawna lista krajów używana przez monitor, z Cyprem i Kosowem, bez Rosji i Turcji. Nie jest to przecięcie geometrii z kontynentem.");
+  if (countries !== null) limitations.push(`Zakres ${getScopeLabel(scope)} filtruje wyłącznie jawne kody krajów w źródle. ${unknownCountryCount} rekordów z tego okna bez kraju pominięto; globalne usługi i komunikaty nie są automatycznie przypisywane do regionu.`);
+  if (scope === "europe") limitations.push("Europa to jawna lista krajów używana przez monitor, z Cyprem i Kosowem, bez Rosji i Turcji. Nie jest to przecięcie geometrii z kontynentem.");
   if (unknownTimeCount > 0) limitations.push(`${unknownTimeCount} rekordów w tym zakresie geograficznym ma nieznany lub niespójny wymagany czas i nie da się ich przypisać do okna.`);
   if (validity.some((event) => event.valid_to === null)) limitations.push("Część ostrzeżeń nie ma końca ważności. Otwarte okresy uwzględniono tylko przy statusie aktywnym podanym przez źródło; w pozostałych przypadkach uwzględniono wyłącznie znany początek w oknie.");
   if (cachedCount > 0) limitations.push(`${cachedCount} rekordów pochodzi z poprzedniego publicznego odczytu; zachowano ich pierwotne daty dowodów.`);
@@ -230,7 +223,7 @@ export function buildSituation(snapshot: PublicSnapshot, options: { scope: Scope
   if (now < until - 300_000) limitations.push("Zegar urządzenia jest wcześniejszy niż czas zestawu; sprawdź zegar. Okno pozostaje oparte na zestawie.");
   else if (now - until > 3 * HOUR) limitations.push(`Zestaw ma ${Math.floor((now - until) / HOUR)} godzin. Przegląd nie przedstawia bieżącej sytuacji po czasie jego przygotowania.`);
   limitations.push(...warnings);
-  return { scope: options.scope, scopeLabel: scopeLabel[options.scope], hours: options.hours,
+  return { scope, scopeLabel: getScopeLabel(scope), hours: options.hours,
     since: new Date(since).toISOString(), until: snapshot.generated_at, events,
     highlights: chooseHighlights(events, snapshot, since, until), categoryCounts, timeline, mapped,
     unlocated: events.length - mapped, limitations: [...new Set(limitations)], kindCounts,
@@ -287,7 +280,7 @@ export function createBriefingText(situation: Situation, snapshot: PublicSnapsho
   });
   lines.push("JAK CZYTAĆ TEN BRIEF", "Trzęsienia i katastrofy liczone według początku zdarzenia; pogoda i lotnictwo według ważności; cyber, internet i pogoda kosmiczna według publikacji.",
     "Kanały i adresy mogą powielać jedno źródło pierwotne. Nie są niezależnymi potwierdzeniami. Nie wyliczono prawdopodobieństwa, ryzyka ani przyczyn.");
-  if (scopeCountries[situation.scope] !== null) lines.push("Zakres obejmuje wyłącznie jawne kody krajów w źródle. Rekordów bez kraju i usług globalnych nie przypisano automatycznie do regionu.");
+  if (getScopeCountries(situation.scope) !== null) lines.push("Zakres obejmuje wyłącznie jawne kody krajów w źródle. Rekordów bez kraju i usług globalnych nie przypisano automatycznie do regionu.");
   lines.push(...situation.limitations.filter((value) => value.startsWith("Zestaw ma ") || value.startsWith("Zegar urządzenia")));
   lines.push("", "ODCZYTY ŹRÓDEŁ (nie stan usług w tej chwili)");
   for (const source of snapshot.sources) lines.push(`${oneLine(source.name, 200)}: ${STATE_LABELS[source.enabled ? source.status : "disabled"]}; ostatni udany odczyt ${formatDate(source.last_success_at)}.`);

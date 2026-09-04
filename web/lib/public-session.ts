@@ -1,8 +1,9 @@
 import type { Category, EventDetail } from "./contracts";
 import { PUBLIC_SOURCE_IDS, PUBLIC_TIME_BASIS, validatePublicSnapshot, type PublicSnapshot, type PublicSourceId } from "./public-snapshot";
+import { normalizeScopeId, type ScopeId } from "./areas";
 
 export interface SharedView {
-  scope: "world" | "europe" | "poland" | "turkey";
+  scope: ScopeId;
   hours: 24 | 72 | 168;
   view: "overview" | "explore" | "briefing";
   eventId?: string;
@@ -13,7 +14,6 @@ export interface SharedView {
 
 /** Only these explicit public-view fields may enter a shared URL. */
 const SHARED_KEYS = ["scope", "hours", "view", "eventId", "category", "sourceId", "search"] as const;
-const SCOPES = new Set(["world", "europe", "poland", "turkey"]);
 const VIEWS = new Set(["overview", "explore", "briefing"]);
 const SOURCES = new Set<string>(PUBLIC_SOURCE_IDS);
 const CATEGORIES = new Set(Object.keys(PUBLIC_TIME_BASIS));
@@ -24,7 +24,8 @@ export const MAX_SHARE_SEARCH_LENGTH = 200;
 
 function validSharedView(value: Record<string, unknown>): Partial<SharedView> {
   const result: Partial<SharedView> = {};
-  if (typeof value.scope === "string" && SCOPES.has(value.scope)) result.scope = value.scope as SharedView["scope"];
+  const scope = normalizeScopeId(value.scope);
+  if (scope) result.scope = scope;
   if (value.hours === 24 || value.hours === 72 || value.hours === 168) result.hours = value.hours;
   if (typeof value.view === "string" && VIEWS.has(value.view)) result.view = value.view as SharedView["view"];
   if (typeof value.eventId === "string" && UUID.test(value.eventId)) result.eventId = value.eventId.toLowerCase();
