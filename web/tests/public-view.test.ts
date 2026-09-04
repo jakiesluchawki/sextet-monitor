@@ -3,8 +3,17 @@ import test from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { EventDetail } from "../lib/contracts";
-import { eventSourceNames, filterViewEvents } from "../lib/public-view";
+import { eventSourceNames, filterViewEvents, snapshotCalendarDay } from "../lib/public-view";
 import SignalRows, { PinButton } from "../components/SignalRows";
+
+test("snapshot stamp and export day follow Warsaw across UTC midnight and seasonal offsets",()=>{
+  assert.equal(snapshotCalendarDay("2026-09-04T22:49:00Z"),"2026-09-05");
+  assert.equal(snapshotCalendarDay("2026-01-04T23:49:00Z"),"2026-01-05");
+  assert.equal(snapshotCalendarDay("2026-01-04T22:49:00Z"),"2026-01-04");
+  assert.equal(snapshotCalendarDay("2026-09-05T00:49:00+02:00"),"2026-09-05");
+  assert.equal(snapshotCalendarDay("not-a-date"),null);
+  assert.equal(snapshotCalendarDay(null),null);
+});
 
 function record(overrides: Partial<EventDetail> = {}): EventDetail {
   return {
