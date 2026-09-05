@@ -485,27 +485,27 @@ test("public schema rejects unpublished extra fields on sources, events, evidenc
 });
 
 
-function nineSourceFixture():PublicSnapshot {
+function allSourcesFixture():PublicSnapshot {
   const snapshot=publicFixture();
   const template=snapshot.events[0];
   snapshot.sources=PUBLIC_SOURCE_IDS.map((id)=>sourceFixture({id,name:PUBLIC_SOURCE_INFO[id].name,status:"ok",record_count:1,last_attempt_at:"2026-08-27T11:00:00Z",last_success_at:"2026-08-27T11:00:00Z"}));
   snapshot.events=PUBLIC_SOURCE_IDS.map((id,index)=>({
-    ...structuredClone(template),id:`0000000${index+1}-1111-5111-8111-111111111111`,category:PUBLIC_SOURCE_INFO[id].categories[0],source_ids:[id],
+    ...structuredClone(template),id:`${String(index+1).padStart(8,"0")}-1111-5111-8111-111111111111`,category:PUBLIC_SOURCE_INFO[id].categories[0],source_ids:[id],
     issued_at:"2026-08-27T10:00:00Z",valid_from:"2026-08-27T10:00:00Z",
     evidence:[{...structuredClone(template.evidence[0]),source_id:id,source_name:PUBLIC_SOURCE_INFO[id].name,origins:[`fixture:${id}`]}],
   }));
   return snapshot;
 }
 
-test("the public schema admits all nine approved feeds, seven categories and honest failed-source metadata",()=>{
-  const snapshot=nineSourceFixture();
+test("the public schema admits all approved feeds, seven categories and honest failed-source metadata",()=>{
+  const snapshot=allSourcesFixture();
   const failed=snapshot.sources.find((source)=>source.id==="noaa_swpc")!;
   failed.status="error";failed.error="Latest fetch failed; retaining the earlier public reading.";
   failed.last_success_at="2026-08-26T11:00:00Z";
   const retained=snapshot.events.find((event)=>event.source_ids.includes(failed.id))!;
   retained.tags.push("cached_public_data");retained.evidence[0].retrieved_at=failed.last_success_at;
   const parsed=validatePublicSnapshot(snapshot);
-  assert.equal(parsed.sources.length,9);
+  assert.equal(parsed.sources.length,PUBLIC_SOURCE_IDS.length);
   assert.equal(new Set(parsed.events.map((event)=>event.category)).size,7);
   assert.equal(parsed.sources.find((source)=>source.id===failed.id)?.status,"error");
   assert.equal(parsed.events.find((event)=>event.id===retained.id)?.evidence[0].retrieved_at,"2026-08-26T11:00:00Z");
@@ -520,7 +520,7 @@ test("the public schema admits all nine approved feeds, seven categories and hon
 
 test("public source selection chooses a source time basis without leaking source state into private queries",()=>{
   const query={...PUBLIC_DEFAULT_QUERY,country:"PL",severity_min:2,since:"2026-08-26T06:00:00Z",until:"2026-08-27T06:00:00Z"};
-  const expected={usgs:"occurred",meteoalarm:"validity",cisa_kev:"published",gdacs:"occurred",easa_czib:"validity",nasa_eonet:"occurred",noaa_swpc:"published",github_status:"published",cloudflare_status:"published"};
+  const expected={usgs:"occurred",meteoalarm:"validity",cisa_kev:"published",gdacs:"occurred",easa_czib:"validity",nasa_eonet:"occurred",noaa_swpc:"published",github_status:"published",cloudflare_status:"published",cert_pl:"published",imgw_hydro:"validity"};
   for(const id of PUBLIC_SOURCE_IDS){
     const selected=selectPublicSource({query},id);
     assert.equal(selected.sourceId,id);
@@ -558,7 +558,7 @@ test("a category change cannot silently keep an incompatible public source and G
 });
 
 test("source predicates feed one bounded list, timeline and map without fabricating locations or source independence",()=>{
-  const snapshot=nineSourceFixture();
+  const snapshot=allSourcesFixture();
   const gdacs=snapshot.events.find((event)=>event.source_ids.includes("gdacs"))!;
   gdacs.geometry={type:"Point",coordinates:[21,52]};gdacs.severity=3;gdacs.countries=["PL"];
   snapshot.events.push({...structuredClone(gdacs),id:"aaaaaaaa-1111-5111-8111-111111111111",category:"disaster",geometry:null,severity:1});
@@ -581,7 +581,7 @@ test("source predicates feed one bounded list, timeline and map without fabricat
 });
 
 test("public health counts only enabled nonempty successful feeds and exposes missing, cached, empty and failed coverage",()=>{
-  const snapshot=nineSourceFixture();
+  const snapshot=allSourcesFixture();
   const source=(id:string)=>snapshot.sources.find((item)=>item.id===id)!;
   source("usgs").record_count=20; // Provider count is not the count in the public artifact.
   source("meteoalarm").status="ok_empty";source("meteoalarm").record_count=0;
@@ -595,15 +595,15 @@ test("public health counts only enabled nonempty successful feeds and exposes mi
   snapshot.sources=snapshot.sources.filter((item)=>item.id!=="cloudflare_status");
   snapshot.events=snapshot.events.filter((event)=>!["meteoalarm","easa_czib","cloudflare_status"].includes(event.source_ids[0]));
   const overview=publicSourceCoverage(snapshot);
-  assert.equal(overview.expected,9);assert.equal(overview.present,8);
-  assert.equal(overview.healthy,1);assert.equal(overview.empty,1);assert.equal(overview.incomplete.length,7);
+  assert.equal(overview.expected,PUBLIC_SOURCE_IDS.length);assert.equal(overview.present,PUBLIC_SOURCE_IDS.length-1);
+  assert.deepEqual(overview.entries.filter(item=>item.healthy).map(item=>item.id),["usgs","cert_pl","imgw_hydro"]);assert.equal(overview.empty,1);assert.equal(overview.incomplete.length,7);
   assert.deepEqual(overview.missing.map((item)=>item.id),["cloudflare_status"]);
   assert.equal(overview.entries.find((item)=>item.id==="usgs")?.records,1);
   assert.equal(overview.entries.find((item)=>item.id==="cisa_kev")?.cached,1);
   assert.equal(overview.entries.find((item)=>item.id==="meteoalarm")?.tone,"muted");
-  for(const item of overview.entries.filter((item)=>item.id!=="usgs"))assert.equal(item.healthy,false);
+  for(const item of overview.entries.filter((item)=>!["usgs","cert_pl","imgw_hydro"].includes(item.id)))assert.equal(item.healthy,false);
   const legacy=publicSourceCoverage(publicFixture());
-  assert.equal(legacy.missing.length,8);assert.equal(legacy.healthy,1);
+  assert.equal(legacy.missing.length,PUBLIC_SOURCE_IDS.length-1);assert.equal(legacy.healthy,1);
 });
 
 test("a new snapshot cannot make cached evidence current or replace its event time with a fetch time",()=>{
@@ -630,7 +630,7 @@ test("a new snapshot cannot make cached evidence current or replace its event ti
 });
 
 test("source selection is a labelled public-only control, all categories are reachable, and the source panel is discoverable",()=>{
-  const snapshot=nineSourceFixture(),overview=publicSourceCoverage(snapshot);
+  const snapshot=allSourcesFixture(),overview=publicSourceCoverage(snapshot);
   const sourceFilter={value:"gdacs",options:overview.entries.map((item)=>({id:item.id,name:item.name,label:item.label,records:item.records,available:Boolean(item.source)})),onChange:()=>undefined,onShowSources:()=>undefined};
   const props={query:PUBLIC_DEFAULT_QUERY,onChange:()=>undefined,onReset:()=>undefined};
   const markup=renderToStaticMarkup(React.createElement(FilterPanel,{...props,snapshot:{generatedAt:snapshot.generated_at,countries:["PL"],sourceFilter}}));

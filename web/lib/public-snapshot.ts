@@ -5,7 +5,7 @@ import { changeQuery, DEFAULT_QUERY } from "./filters";
 import { eventTime, publicSourceHealth, safeHttpUrl } from "./format";
 
 export const MAX_SNAPSHOT_BYTES=16*1024*1024;
-export const PUBLIC_SOURCE_IDS=["usgs","meteoalarm","cisa_kev","gdacs","easa_czib","nasa_eonet","noaa_swpc","github_status","cloudflare_status"] as const;
+export const PUBLIC_SOURCE_IDS=["usgs","meteoalarm","cisa_kev","gdacs","easa_czib","nasa_eonet","noaa_swpc","github_status","cloudflare_status","cert_pl","imgw_hydro"] as const;
 export type PublicSourceId=typeof PUBLIC_SOURCE_IDS[number];
 export const PUBLIC_SOURCE_INFO:Record<PublicSourceId,{name:string;categories:readonly Category[]}>={
   usgs:{name:"USGS",categories:["earthquake"]},
@@ -17,6 +17,8 @@ export const PUBLIC_SOURCE_INFO:Record<PublicSourceId,{name:string;categories:re
   noaa_swpc:{name:"NOAA SWPC",categories:["space_weather"]},
   github_status:{name:"GitHub Status",categories:["internet"]},
   cloudflare_status:{name:"Cloudflare Status",categories:["internet"]},
+  cert_pl:{name:"CERT Polska · odsyłacze",categories:["cyber"]},
+  imgw_hydro:{name:"IMGW · hydrologia",categories:["weather"]},
 };
 export const PUBLIC_TIME_BASIS:Record<Category,Exclude<TimeBasis,"changed">>={earthquake:"occurred",disaster:"occurred",weather:"validity",aviation:"validity",cyber:"published",internet:"published",space_weather:"published"};
 /** Source selection is local to Pages and is never serialized into the private API query. */
@@ -103,7 +105,7 @@ export function validatePublicSnapshot(value:unknown,nowMs=Date.now()):PublicSna
     for(const key of ["occurred_start","occurred_end","issued_at","source_updated_at","valid_from","valid_to","last_changed_at"])requireValue(timestamp(item[key]),"niepoprawna data rekordu.");
     for(const key of ["first_seen_at","last_seen_at"])requireValue(timestamp(item[key],false),"brak czasu przygotowania rekordu.");
     requireValue(strings(item.countries,250) && item.countries.every((code)=>/^[A-Z]{2}$/.test(code)) && strings(item.tags) && validGeometry(item.geometry,budget),"niepoprawna geometria, kraj lub tagi.");
-    requireValue(strings(item.source_ids,PUBLIC_SOURCE_IDS.length) && item.source_ids.length>0 && item.source_ids.every((id)=>includedSources.has(id)) && new Set(item.source_ids).size===item.source_ids.length && item.source_count===item.source_ids.length && integer(item.independent_source_count,0,10) && publicUrl(item.source_url),"niepoprawne pochodzenie rekordu.");
+    requireValue(strings(item.source_ids,PUBLIC_SOURCE_IDS.length) && item.source_ids.length>0 && item.source_ids.every((id)=>includedSources.has(id)) && new Set(item.source_ids).size===item.source_ids.length && item.source_count===item.source_ids.length && integer(item.independent_source_count,0,PUBLIC_SOURCE_IDS.length) && publicUrl(item.source_url),"niepoprawne pochodzenie rekordu.");
     requireValue(Array.isArray(item.revisions) && item.revisions.length===0,"historia prywatnego monitora nie jest częścią zestawu.");
     requireValue(Array.isArray(item.evidence) && item.evidence.length>0 && item.evidence.length<=20,"brak lub nadmiar dowodów.");
     for(const evidence of item.evidence){

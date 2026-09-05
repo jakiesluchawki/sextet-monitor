@@ -37,7 +37,8 @@ def main():
         env = os.environ.copy()
         env["TEST_DATABASE_URL"] = test_url.render_as_string(hide_password=False)
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--tb=short", "tests/test_storage.py", "tests/test_identity_review.py"],
+            [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--tb=short",
+             "tests/test_storage.py", "tests/test_identity_review.py", "tests/test_ingestion.py"],
             cwd=Path(__file__).resolve().parents[1], env=env,
         )
         print(json.dumps({"isolated_postgis_tests": result.returncode == 0, "database": name,

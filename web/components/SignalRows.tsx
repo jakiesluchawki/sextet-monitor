@@ -5,7 +5,7 @@ import { PUBLIC_TIME_BASIS } from "@/lib/public-snapshot";
 import { eventSourceNames } from "@/lib/public-view";
 
 export function PinButton({event,pinned,onPin}:{event:EventDetail;pinned:boolean;onPin:(id:string)=>void}){
-  return <button className="pin-button" aria-label={`${pinned ? "Odepnij" : "Przypnij"}: ${event.title}`} title={pinned ? "Usuń z przypiętych" : "Przypnij do briefingu na tym urządzeniu"} aria-pressed={pinned} onClick={()=>onPin(event.id)}><svg width="17" height="17" viewBox="0 0 24 24" fill={pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.7l6.4-.9Z"/></svg></button>;
+  return <button className="pin-button" aria-label={`${pinned ? "Odepnij" : "Przypnij"}: ${event.title}`} title={pinned ? "Usuń z przypiętych" : "Zapisz na tym urządzeniu; briefing uwzględnia obszar i czas"} aria-pressed={pinned} onClick={()=>onPin(event.id)}><svg width="17" height="17" viewBox="0 0 24 24" fill={pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.7l6.4-.9Z"/></svg></button>;
 }
 
 export default function SignalRows({events,selectedId,pinnedIds,onSelect,onPin,reasons,compact=false,changedIds=[],addedIds=[]}:{events:EventDetail[];selectedId:string|null;pinnedIds:readonly string[];onSelect:(id:string)=>void;onPin:(id:string)=>void;reasons?:Record<string,string>;compact?:boolean;changedIds?:readonly string[];addedIds?:readonly string[]}){

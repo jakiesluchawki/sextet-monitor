@@ -42,6 +42,20 @@ SOURCES: dict[str, SourceSpec] = {
         license_url="https://github.com/cisagov/kev-data/blob/develop/LICENSE",
         attribution="Cybersecurity and Infrastructure Security Agency (CISA)",
     ),
+    "cert_pl": SourceSpec(
+        id="cert_pl", name="CERT Polska · komunikaty dla użytkowników", poll_interval_seconds=3600,
+        coverage="Indeks dat i odsyłaczy do ostatnich 10 komunikatów RSS dla użytkowników. Bez artykułów, oceny wagi, pełnego archiwum i przypisywania kraju oddziaływania na podstawie siedziby wydawcy.",
+        license_name="Indeks odsyłaczy; treść u wydawcy (NASK)",
+        license_url="https://moje.cert.pl/terms/",
+        attribution="CERT Polska / NASK; indeks dat, identyfikatorów i odsyłaczy z publicznego RSS. Tytuły indeksu wygenerowano; treść komunikatów pozostaje u wydawcy.",
+    ),
+    "imgw_hydro": SourceSpec(
+        id="imgw_hydro", name="IMGW · ostrzeżenia hydrologiczne", poll_interval_seconds=900,
+        coverage="Polska: komunikaty hydrologiczne, nie pomiary stacji ani mapa zalania. Daty UTC z oficjalnej listy; ważność do odwołania zachowano. Zniknięcie z listy nie jest dowodem odwołania. IMGW jest też źródłem polskich danych MeteoAlarm.",
+        license_name="Regulamin IMGW-PIB; użytek niezarobkowy, atrybucja i oznaczenie przetworzenia",
+        license_url="https://hydro.imgw.pl/#/regulamin",
+        attribution="Źródłem pochodzenia danych jest Instytut Meteorologii i Gospodarki Wodnej – Państwowy Instytut Badawczy. Dane Instytutu Meteorologii i Gospodarki Wodnej – Państwowego Instytutu Badawczego zostały przetworzone.",
+    ),
     "nasa_eonet": SourceSpec(
         id="nasa_eonet", name="NASA EONET · pożary, wulkany i burze", poll_interval_seconds=900,
         coverage="Kuratorskie metadane globalnych pożarów, wulkanów i silnych burz; okno API 30 dni, maksymalnie 400 rekordów. Przybliżone miejsce i czas; nie wszystkie lokalne zdarzenia.",
@@ -85,6 +99,7 @@ _MODULES = {
     "easa_czib": "easa", "cisa_kev": "cisa", "cloudflare_radar": "radar",
     "nasa_eonet": "eonet", "noaa_swpc": "swpc",
     "github_status": "github_status", "cloudflare_status": "cloudflare_status",
+    "cert_pl": "cert", "imgw_hydro": "imgw_hydro",
 }
 
 

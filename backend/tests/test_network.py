@@ -10,10 +10,22 @@ from monitor.network import FetchError, RateLimited, SafeHTTPClient, validate_ur
     "https://user:pass@earthquake.usgs.gov/earthquakes/feed/x",
     "https://api.cloudflare.com/client/v4/accounts",
     "https://feeds.meteoalarm.org/api/v1/warnings/%2e%2e/private",
+    "https://moje.cert.pl/komunikaty/2026/1/example/",
+    "https://moje.cert.pl/accounts/login/",
+    "https://hydro-back.imgw.pl/station/details",
+    "https://hydro-back.imgw.pl.evil.test/alerts/warnings/hydro/getCurrentWarnings",
 ])
 def test_untrusted_provider_urls_are_rejected(url):
     with pytest.raises(FetchError):
         validate_url(url)
+
+
+@pytest.mark.parametrize("url,host", [
+    ("https://moje.cert.pl/advisory_feed/advisory/feed/?category=1", "moje.cert.pl"),
+    ("https://hydro-back.imgw.pl/alerts/warnings/hydro/getCurrentWarnings", "hydro-back.imgw.pl"),
+])
+def test_polish_collectors_use_only_the_reviewed_official_endpoints(url, host):
+    assert validate_url(url) == host
 
 
 async def test_conditional_fetch_preserves_body():

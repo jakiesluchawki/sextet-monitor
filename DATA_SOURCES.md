@@ -1,6 +1,6 @@
 # Źródła danych — uruchamiany zakres
 
-Stan adapterów: 1.09.2026. Dziewięć źródeł bez klucza jest dostępnych dla niezależnego zestawu publicznego; Cloudflare Radar pozostaje dodatkowym adapterem lokalnym wymagającym tokenu. Poniższe okresy dotyczą workera lokalnego. Publiczne Pages planuje wspólny odczyt co godzinę. Żaden z tych okresów **nie jest deklaracją opóźnienia dostawcy ani SLA**.
+Stan adapterów: 5.09.2026. Jedenaście kanałów bez klucza jest dostępnych dla niezależnego zestawu publicznego; Cloudflare Radar pozostaje dodatkowym adapterem lokalnym wymagającym tokenu. Poniższe okresy dotyczą workera lokalnego. Publiczne Pages planuje wspólny odczyt co godzinę. Żaden z tych okresów **nie jest deklaracją opóźnienia dostawcy ani SLA**.
 
 Zatwierdzony snapshot researchu (historyczny materiał lokalny, poza repozytorium) i receipty HTTP (historyczny materiał lokalny, poza repozytorium) dotyczą odczytów z 26.08.2026 UTC. Zachowujemy je jako dowód tego sprawdzenia, nie aktualizujemy historycznych wyników wstecz.
 
@@ -15,6 +15,8 @@ Zatwierdzony snapshot researchu (historyczny materiał lokalny, poza repozytoriu
 | `noaa_swpc` | Alerty, podsumowania, prognozy i ostrzeżenia SWPC, do 400 komunikatów z 30 dni, co 5 min | Bez klucza; własne informacje NOAA/NWS public domain, atrybucja |
 | `github_status` | Ostatnie 50 incydentów oficjalnego statusu GitHuba, co 5 min | Bez klucza; wyłącznie metadane faktów i linki, bez komunikatów i postmortemów |
 | `cloudflare_status` | Ostatnie 50 incydentów oficjalnego statusu Cloudflare, co 5 min | Bez klucza; wyłącznie metadane faktów i linki; nie jest to Radar |
+| `cert_pl` | Ostatnich 10 odsyłaczy RSS dla użytkowników, co 60 min | Bez klucza; neutralny indeks ID/dat/linków bez oryginalnych tytułów i artykułów |
+| `imgw_hydro` | Bieżące ostrzeżenia hydrologiczne, do 500, co 15 min | Bez klucza; niezarobkowy cel prywatny, pełna atrybucja i oznaczenie przetworzenia; nie CC |
 | `cloudflare_radar` | Adnotacje outages z ostatnich 7 dni co 5 min, warunkowo | Bearer Radar Read; CC BY-NC 4.0; bez tokenu brak żądań i `needs_credentials` |
 
 ## Dokładne endpointy i interpretacja
@@ -92,3 +94,24 @@ Zatwierdzony snapshot researchu (historyczny materiał lokalny, poza repozytoriu
 Bezpośrednie FIRMS, IMGW hydro/pomiary, EMSC, Open-Meteo/ECMWF, IODA, GDELT, ReliefWeb, NOTAM, AIS/GNSS oraz dane energetyczne i rynkowe pozostają kandydatami, nie uruchomionymi bezpośrednio źródłami. FIRMS może występować jako pochodzenie wpisu GDACS/EONET. Rozszerzenie wymaga sprawdzenia konkretnego produktu, dostępu, praw archiwizacji i rzeczywistego payloadu. Detekcje termiczne nie mogą stać się automatycznie „potwierdzonymi pożarami”. IMGW hydro wymaga między innymi potwierdzenia strefy czasowej pomiarów i interpretacji specjalnych dat/stopni ostrzeżeń.
 
 Licencja aplikacji lub biblioteki nie przyznaje prawa do publikacji feedów. Dane i atrybucja pozostają powiązane z konkretnym źródłem; eksport lub użycie komercyjne wymagają osobnego przeglądu.
+
+## Źródła dodane w wersji 03
+
+**CERT Polska**
+
+- [Publiczny RSS dla użytkowników](https://moje.cert.pl/advisory_feed/advisory/feed/?category=1), oferowany w [oficjalnym komunikacie CERT](https://cert.pl/posts/2025/05/moje.cert.pl-powiadomienia/). Limit 10 ostatnich pozycji i 512 KiB; to nie archiwum.
+- Publikujemy datę, stabilne ID rok/numer, odsyłacz i własny neutralny tytuł. Bez oryginalnych tytułów, opisów, obrazów i treści artykułów. [Regulamin NASK](https://moje.cert.pl/terms/) nie jest otwartą licencją, dlatego nie oznaczamy danych jako CC.
+- Rodzaj advisory, kategoria cyber. Data RSS to publikacja, nie data ataku. Brak oceny dotkliwości, kraju oddziaływania i okresu ważności. Komunikaty są widoczne w obszarze Świat; polski wydawca nie wyznacza geograficznego zasięgu zagrożenia.
+
+**IMGW Hydrologia**
+
+- Oficjalna [mapa i lista ostrzeżeń](https://hydro.imgw.pl/#/warnings/hydro) używa [getCurrentWarnings](https://hydro-back.imgw.pl/alerts/warnings/hydro/getCurrentWarnings). Daty releaseDate/dateFrom/dateTo zawierają offset UTC. Starszy endpoint warningshydro z datami bez strefy nie jest fallbackiem.
+- ID komunikatu pozostaje źródłowe; referenceDate nie jest ID poprzednika. Aktualizacje bez jednoznacznego poprzednika mają jawny tag i opis, bez zgadywanego scalenia. To ograniczenie historii, nie niekompletność bieżącej listy.
+- Ważność do odwołania zachowuje isUntilRevoke; kod suszy -1 nie jest stopniem zerowego zagrożenia. Stopnie 1/2/3 mapują się na 2/3/4 z podaniem oryginału. Bez fikcyjnych poligonów i bez importowania stacji jako incydentów.
+- IMGW jest też pochodzeniem polskich komunikatów MeteoAlarm. Dwa kanały nie stanowią niezależnego potwierdzenia.
+- [Regulamin hydrologiczny](https://hydro.imgw.pl/#/regulamin) oraz [warunki danych IMGW](https://danepubliczne.imgw.pl/apiinfo): obecny projekt jest niezarobkowy i nie zawiera reklam. Zachowujemy pełną atrybucję i oznaczenie przetworzenia. Nie deklarujemy CC ani prawa do zastosowań komercyjnych lub specjalistycznych.
+- Bieżąca lista nie jest archiwum. W instalacji lokalnej zniknięcie otwartego ostrzeżenia z kompletnego odczytu zmienia stan na nieustalony, nie odwołany; ostatnia obserwacja pozostaje z pierwotną datą. Błąd, niekompletna lub starsza lista nie uruchamia tej zmiany.
+
+**IODA — niepublikowany pilotaż**
+
+Sprawdzono ograniczony zestaw zapytań do oficjalnego API. Historyczny pomiar Ukrainy był niepusty, ale listy zdarzeń dla UA i PL nie potwierdziły gotowego feedu incydentów. Nie wyjaśniono retencji i progów tego endpointu ani aktualnych warunków redystrybucji danych Georgia Tech. Sam dostęp HTTP i licencja kodu nie wystarczają do publikacji danych. Adapter nie jest włączony ani wliczany do źródeł.

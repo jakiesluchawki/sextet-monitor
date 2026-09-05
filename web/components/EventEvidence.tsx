@@ -37,23 +37,23 @@ export default function EventEvidence({detail,readAt,selected,loading,error,outs
     {detail.tags.includes("country_geometry_not_fir") && <p className="context-notice">Mapa pokazuje granice kraju jako kontekst. Nie przedstawia granic FIR ani dokładnego obszaru ostrzeżenia lotniczego.</p>}
     {detail.tags.includes("representative_point_not_extent") && <p className="context-notice">Pozycja jest orientacyjnym punktem źródłowym. Nie opisuje zasięgu zdarzenia lub zagrożenia.</p>}
     <p className="event-description">{detail.description || "Źródło nie podało dodatkowego opisu."}</p>
-    <OriginalLink url={detail.source_url}>Otwórz oryginalny komunikat</OriginalLink>
+    <OriginalLink url={detail.source_url}>{detail.source_url==="https://hydro.imgw.pl/#/warnings/hydro" ? "Otwórz listę ostrzeżeń IMGW" : "Otwórz oryginalny komunikat"}</OriginalLink>
     <section className="detail-section"><h3>Co wiadomo</h3><dl className="data-pairs">
       <dt>Obszar</dt><dd>{detail.countries.length ? detail.countries.map(countryName).join(", ") : "Nie ustalono"}</dd>
       <dt>Lokalizacja</dt><dd>{detail.geometry ? PRECISION_LABELS[detail.location_precision] || detail.location_precision : "Brak geometrii źródłowej"}</dd>
       <dt>Dokładność czasu</dt><dd>{PRECISION_LABELS[detail.time_precision] || detail.time_precision || "Nieustalona"}</dd>
       <dt>Niezależne źródła</dt><dd>{detail.independent_source_count}</dd>
-      <dt>Weryfikacja</dt><dd>{({single_source:"Jedno źródło",corroborated:"Potwierdzenie niezależne",unverified:"Niezweryfikowane",source_reported:"Zapis źródłowy",reported:"Zgłoszone przez źródło",unknown:"Nieustalona"} as Record<string,string>)[detail.verification_status] || detail.verification_status}</dd>
+      <dt>Weryfikacja</dt><dd>{({single_source:"Jedno źródło",corroborated:"Potwierdzenie niezależne",unverified:"Niezweryfikowane",source_reported:"Zapis źródłowy",reported:"Zgłoszone przez źródło",official_warning:"Oficjalny komunikat ostrzegawczy",published_by_cert_pl:"Publikacja CERT Polska",unknown:"Nieustalona"} as Record<string,string>)[detail.verification_status] || detail.verification_status}</dd>
       <dt>Anomalia</dt><dd>Nie wyznaczono</dd>
     </dl><p className="field-help">Brak wyniku anomalii nie oznacza stanu normalnego.</p></section>
     <section className="detail-section"><h3>Waga i jej pochodzenie</h3><p>{detail.severity_reason || "Źródło nie podało uzasadnienia wagi."}</p><dl className="data-pairs"><dt>Wartość źródłowa</dt><dd className="raw-value">{readableUnknown(detail.original_severity)}</dd></dl></section>
-    <section className="detail-section"><h3>Czas i ważność</h3><dl className="data-pairs">{dates.filter(([,key])=>!publicMode || key!=="last_changed_at").map(([label,key])=><div className="data-pair" key={key}><dt>{label}</dt><dd>{formatEventDate(detail,key as Parameters<typeof formatEventDate>[1])}</dd></div>)}</dl><p className="field-help">Godziny: Europe/Warsaw. Daty dzienne zachowują datę źródłową, bez dopisywania godziny.</p></section>
+    <section className="detail-section"><h3>Czas i ważność</h3><dl className="data-pairs">{dates.filter(([,key])=>!publicMode || key!=="last_changed_at").map(([label,key])=><div className="data-pair" key={key}><dt>{label}</dt><dd>{key==="valid_to" && detail.valid_to===null && detail.tags.includes("until_revoked") ? "Do odwołania według źródła" : formatEventDate(detail,key as Parameters<typeof formatEventDate>[1])}</dd></div>)}</dl><p className="field-help">Godziny: Europe/Warsaw. Daty dzienne zachowują datę źródłową, bez dopisywania godziny.</p></section>
     <section className="detail-section"><h3>Dowody <span>{detail.evidence.length}</span></h3>
       {publicMode && <p className="field-help">Zestaw zawiera przetworzone pola. Pełny komunikat pod odnośnikiem źródła; surowe payloady i historia prywatnego monitora nie są publikowane. Każdy dowód ma własną datę pobrania. Nowy plik zestawu nie zmienia dat starszych odczytów.</p>}
       {detail.evidence.length===0 && <p>Brak dowodów w odpowiedzi API. Nie dopisujemy potwierdzeń.</p>}
       {detail.evidence.map((record,index)=><div className="evidence-record" key={`${record.source_id}:${record.provider_record_id}`}>
         <div className="evidence-record-title"><span className="record-number">{String(index+1).padStart(2,"0")}</span><strong>{record.source_name}</strong></div>
-        <OriginalLink url={record.source_url}>Źródło pierwotne</OriginalLink>
+        <OriginalLink url={record.source_url}>{record.source_id==="imgw_hydro" ? "Lista ostrzeżeń IMGW · ID komunikatu poniżej" : "Źródło pierwotne"}</OriginalLink>
         <dl className="data-pairs"><dt>Pobrano</dt><dd>{formatDate(record.retrieved_at)}</dd>{record.source_snapshot_at && <><dt>{record.source_id==="cisa_kev" ? "Snapshot katalogu u źródła" : "Snapshot u źródła"}</dt><dd>{formatDate(record.source_snapshot_at)}</dd></>}<dt>ID dostawcy</dt><dd className="mono">{record.provider_record_id}</dd><dt>Pochodzenie</dt><dd>{record.origins.length ? record.origins.join(", ") : "Nie ustalono"}</dd></dl>
         <p className="attribution">{record.attribution}</p>
         {record.license_url && <OriginalLink url={record.license_url}>Warunki użycia danych</OriginalLink>}

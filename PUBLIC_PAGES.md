@@ -1,12 +1,12 @@
 # Publiczny podgląd GitHub Pages
 
-Pages służy do hostowania plików statycznych; nie uruchamia FastAPI, PostGIS ani stale działającego workera. Pełna instalacja nadal działa lokalnie. Publiczny interfejs 02 współdzieli komponenty mapy i dowodów, ale nie łączy się z prywatnym API. Poniższy opis dotyczy kodu tej wersji; sam dokument nie potwierdza wdrożenia.
+Pages służy do hostowania plików statycznych; nie uruchamia FastAPI, PostGIS ani stale działającego workera. Pełna instalacja nadal działa lokalnie. Publiczny interfejs 03 współdzieli komponenty mapy i dowodów, ale nie łączy się z prywatnym API. Poniższy opis dotyczy kodu tej wersji; sam dokument nie potwierdza wdrożenia.
 
 **Publiczna wersja Sextet Monitor została zatwierdzona przez właściciela 1.09.2026** do udostępniania grupie. Kod i niezależnie pobrane publiczne źródła mogą być publikowane; prywatna baza, historia oraz sekrety pozostają lokalne. Publikacja wymaga `PUBLIC_PAGES_ENABLED=true`. Poprzednia próba dla prywatnego repozytorium była zablokowana przez plan GitHub (HTTP 422); publiczna widoczność jest teraz wyraźnie zaakceptowana, bez zmiany planu płatnego. Prywatność repozytorium nie gwarantuje prywatności strony. [Dokumentacja GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
 
 ## Co obejmuje zestaw
 
-Zestaw obejmuje **dziewięć źródeł**: USGS, MeteoAlarm Polska, CISA KEV, GDACS, EASA CZIB, NASA EONET, NOAA SWPC, GitHub Status i Cloudflare Status, pobrane od nowa do oddzielnej bazy. Wersja 02 nie dodaje dostawców. Widoczna liczba rekordów, kompletność odczytów i stan źródeł zależą od konkretnego zestawu; skonfigurowanie dziewięciu kanałów nie gwarantuje dziewięciu poprawnych odczytów.
+Zestaw obejmuje **jedenaście kanałów**: USGS, MeteoAlarm Polska, CISA KEV, GDACS, EASA CZIB, NASA EONET, NOAA SWPC, GitHub Status, Cloudflare Status, CERT Polska i IMGW Hydrologia, pobrane od nowa do oddzielnej bazy. Widoczna liczba rekordów i stan źródeł zależą od konkretnego zestawu. CERT udostępnia wyłącznie indeks dat i odsyłaczy bez treści artykułów; IMGW obejmuje ostrzeżenia, nie pomiary rzek. Warunki użycia IMGW odnoszą się do obecnego niezarobkowego projektu bez reklam; nie deklarujemy prawa do zastosowania komercyjnego. IODA nie jest publikowana.
 
 Publiczna wersja zawiera przegląd z wyróżnieniami, globus/mapę 2D, listę, oś czasu, dosłowne wyszukiwanie, filtry źródła i kategorii, daty wystąpienia, publikacji i ważności oraz dowody, odnośniki i atrybucję. Briefing i porównanie dwóch zestawów są lokalnymi operacjami przeglądarki. Nie ma pytań do prywatnej bazy, historii operatora, surowych payloadów, promienia PostGIS, AI ani tokenów. Radar pozostaje poza publicznym zestawem. „Odśwież” pobiera nowszy opublikowany plik; nie odpytuje dostawców i nie steruje prywatnym workerem.
 

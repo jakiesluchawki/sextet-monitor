@@ -22,7 +22,7 @@ export interface SituationTimelineBin {
 }
 export interface Situation {
   scope: ScopeId; scopeLabel: string; hours: number; since: string; until: string;
-  events: EventDetail[]; highlights: SituationHighlight[];
+  events: EventDetail[]; undatedEvents: EventDetail[]; highlights: SituationHighlight[];
   categoryCounts: Array<{ category: Category; count: number; timeBasis: TimeBasis }>;
   timeline: SituationTimelineBin[]; mapped: number; unlocated: number; limitations: string[];
   kindCounts: Array<{ kind: string; count: number }>;
@@ -116,7 +116,8 @@ function highlightReason(event: EventDetail, until: number): string {
       upcoming: "Podany początek ważności jest w przyszłości względem zestawu.",
       unknown: "Podany początek ważności jest w oknie; bieżącej ważności nie ustalono.",
     };
-    return prefix + description[status] + (event.valid_to === null ? " Końca ważności nie ustalono." : "");
+    return prefix + description[status] + (event.valid_to === null
+      ? event.tags.includes("until_revoked") ? " Źródło podaje ważność do odwołania." : " Końca ważności nie ustalono." : "");
   }
   return prefix + (basis === "published"
     ? "Publikacja w wybranym oknie; nie oznacza czasu wystąpienia incydentu."
@@ -168,7 +169,9 @@ export function buildSituation(snapshot: PublicSnapshot, options: { scope: Scope
   const since = until - options.hours * HOUR, countries = getScopeCountries(scope);
   const inRegion = (event: EventDetail) => countries === null || event.countries.some((country) => countries.includes(country));
   const regional = snapshot.events.filter(inRegion);
-  const unknownTimeCount = regional.filter((event) => eventSpan(event) === null).length;
+  const undatedEvents = regional.filter((event) => eventSpan(event) === null)
+    .sort((a, b) => compareText(a.title, b.title) || compareText(a.id, b.id));
+  const unknownTimeCount = undatedEvents.length;
   const unknownCountryCount = snapshot.events.filter((event) => {
     const span = eventSpan(event);
     return event.countries.length === 0 && span !== null && intersects(span, since, until);
@@ -224,7 +227,7 @@ export function buildSituation(snapshot: PublicSnapshot, options: { scope: Scope
   else if (now - until > 3 * HOUR) limitations.push(`Zestaw ma ${Math.floor((now - until) / HOUR)} godzin. Przegląd nie przedstawia bieżącej sytuacji po czasie jego przygotowania.`);
   limitations.push(...warnings);
   return { scope, scopeLabel: getScopeLabel(scope), hours: options.hours,
-    since: new Date(since).toISOString(), until: snapshot.generated_at, events,
+    since: new Date(since).toISOString(), until: snapshot.generated_at, events, undatedEvents,
     highlights: chooseHighlights(events, snapshot, since, until), categoryCounts, timeline, mapped,
     unlocated: events.length - mapped, limitations: [...new Set(limitations)], kindCounts,
     activeAdvisories, expiredAdvisories, withdrawnAdvisories, unknownTimeCount, unknownCountryCount, cachedCount,
@@ -232,7 +235,7 @@ export function buildSituation(snapshot: PublicSnapshot, options: { scope: Scope
 }
 
 export function formatSituationTime(event: EventDetail, basis: TimeBasis): string {
-  if (basis === "validity") return `${formatEventDate(event, "valid_from")} → ${formatEventDate(event, "valid_to")}`;
+  if (basis === "validity") return `${formatEventDate(event, "valid_from")} → ${event.valid_to === null && event.tags.includes("until_revoked") ? "do odwołania według źródła" : formatEventDate(event, "valid_to")}`;
   return formatEventDate(event, basis === "occurred" ? "occurred_start" : basis === "published" ? "issued_at" : "last_changed_at");
 }
 const oneLine = (value: string, limit = 500): string => {

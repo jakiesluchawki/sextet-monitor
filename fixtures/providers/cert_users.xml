@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Synthetic test data. Not copied from CERT Polska. -->
+<rss version="2.0">
+  <channel>
+    <title>Synthetic CERT RSS for tests</title>
+    <link>https://moje.cert.pl/advisory_feed/advisory/feed/?category=1</link>
+    <description>Synthetic fixture; no publisher article content.</description>
+    <lastBuildDate>Thu, 03 Sep 2026 14:01:02 +0000</lastBuildDate>
+    <item>
+      <title>WYMYŚLONY TYTUŁ TESTOWY: podejrzany fioletowy robot</title>
+      <link>https://moje.cert.pl/komunikaty/2026/900001/synthetic-one/</link>
+      <description><![CDATA[WYMYŚLONY OPIS TESTOWY <script>never-copy-this</script><p>Fioletowy robot nie jest prawdziwym komunikatem.</p>]]></description>
+      <pubDate>Thu, 03 Sep 2026 16:01:02 +0200</pubDate>
+      <guid isPermaLink="true">https://moje.cert.pl/komunikaty/2026/900001/synthetic-one/</guid>
+      <category>Dla użytkowników</category>
+    </item>
+    <item>
+      <title>WYMYŚLONY TYTUŁ TESTOWY: starszy komunikat</title>
+      <link>https://moje.cert.pl/komunikaty/2026/900002/synthetic-two/</link>
+      <description>WYMYŚLONY OPIS TESTOWY drugiego komunikatu.</description>
+      <pubDate>Fri, 28 Aug 2026 12:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://moje.cert.pl/komunikaty/2026/900002/synthetic-two/</guid>
+      <category>Dla użytkowników</category>
+    </item>
+  </channel>
+</rss>

@@ -33,6 +33,7 @@ from .worker import run_source, transaction
 PUBLIC_SOURCE_IDS = (
     "usgs", "meteoalarm", "cisa_kev", "gdacs", "easa_czib",
     "nasa_eonet", "noaa_swpc", "github_status", "cloudflare_status",
+    "cert_pl", "imgw_hydro",
 )
 MAX_EVENTS = 10_000
 MAX_BYTES = 16 * 1024 * 1024
@@ -44,6 +45,8 @@ PUBLIC_LIMITATIONS = [
     "NASA EONET: do 400 wpisów o pożarach, wulkanach i burzach z okna 30 dni; osiągnięcie limitu oznacza niepełny odczyt. Przybliżone miejsce i czas, z zachowaniem pochodzenia danych.",
     "NOAA SWPC: obserwowane alerty i podsumowania oddzielono od prognoz i ostrzeżeń; brak mapy zakłóceń GPS. Stan prognozy dotyczy jej okresu ważności, nie potwierdzenia zjawiska.",
     "GitHub Status i Cloudflare Status: metadane ostatnich 50 incydentów każdego operatora, nie pełne archiwa ani pomiar całego Internetu. Pełne komunikaty pozostają w źródle.",
+    "CERT Polska: indeks dat i odsyłaczy do ostatnich 10 komunikatów dla użytkowników, bez kopiowania artykułów i bez pełnego archiwum. Siedziba wydawcy nie wyznacza kraju oddziaływania.",
+    "IMGW: ostrzeżenia hydrologiczne, nie pomiary rzek ani mapa zalania. Daty z jawną strefą UTC; ważność do odwołania nie oznacza nowego incydentu. Brak wiarygodnej daty wyklucza zapis z osi czasu. IMGW i polski MeteoAlarm nie są niezależnymi źródłami.",
     "Zachowano źródłowe daty i geometrię. Brak czasu lub pozycji pozostaje nieznany; przypisania krajów wykorzystują uproszczone granice Natural Earth.",
     "Surowe payloady i historia zmian nie są publikowane. Pełne komunikaty są dostępne pod odnośnikami źródeł; pola zestawu są przetworzone.",
     "Przy awarii źródła można zachować jego poprzedni publiczny odczyt: jest oznaczony, ma oryginalne daty, a źródło pozostaje w stanie błędu. Brak rekordu na mapie nie oznacza braku danych na liście.",

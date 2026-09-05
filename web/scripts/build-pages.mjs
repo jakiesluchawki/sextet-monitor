@@ -185,7 +185,7 @@ async function main() {
     images: { unoptimized: true },
   };\n`);
   await writeFile(join(buildRoot, "app/page.tsx"), 'import PublicMonitor from "@/components/PublicMonitor";\nexport default function Page() { return <PublicMonitor />; }\n');
-  const description = "Sextet Monitor 02: przegląd sytuacji, interaktywna mapa, zmiany w źródłach i briefing do udostępnienia. Publiczne dane, jawne ograniczenia.";
+  const description = "Sextet Monitor 03: przegląd sytuacji, interaktywna mapa, zmiany w źródłach i briefing do udostępnienia. Publiczne dane, jawne ograniczenia.";
   const publicMetadata = {
     title: "Sextet Monitor",
     description,

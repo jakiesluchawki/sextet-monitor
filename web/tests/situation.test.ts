@@ -108,7 +108,26 @@ test("category time bases never fall back to retrieval or modification clocks", 
   const unknown = buildSituation(snapshot(missing), { scope: "world", hours: 24 });
   assert.equal(unknown.events.length, 0);
   assert.equal(unknown.unknownTimeCount, 7);
+  assert.equal(unknown.undatedEvents.length, 7);
   assert.match(unknown.limitations.join(" "), /nieznany lub niespójny wymagany czas/);
+});
+
+test("undated records stay visible separately without entering regional time counts or briefing", () => {
+  const hydro = event({ id: "undated-pl", title: "Undated hydrology fixture", category: "weather", kind: "advisory",
+    countries: ["PL"], valid_from: null, valid_to: null, lifecycle_status: "unknown", source_ids: ["imgw_hydro"] });
+  const saved = snapshot([hydro, { ...hydro, id: "undated-ua", countries: ["UA"] },
+    { ...hydro, id: "undated-global", countries: [] }, event({ id: "dated-pl", countries: ["PL"] })]);
+  freezeDeep(saved);
+  const result = buildSituation(saved, { scope: "poland", hours: 24 });
+  assert.deepEqual(result.undatedEvents.map(({ id }) => id), ["undated-pl"]);
+  assert.deepEqual(result.events.map(({ id }) => id), ["dated-pl"]);
+  assert.equal(result.activeAdvisories, 0);
+  assert.equal(result.categoryCounts.find(({ category }) => category === "weather")?.count, 0);
+  assert.equal(result.timeline.reduce((sum, bin) => sum + bin.count, 0), 1);
+  const text = createBriefingText(result, saved, [hydro.id]);
+  assert.match(text, /Pominięto 1/);
+  assert.doesNotMatch(text, /Undated hydrology fixture/);
+  assert.deepEqual(buildSituation(saved, { scope: "poland", hours: 168 }).undatedEvents, result.undatedEvents);
 });
 
 test("historical KEV entries with a new ingestion clock do not appear as recent events", () => {
@@ -182,6 +201,10 @@ test("an active source can have an unknown end; unknown or expired status does n
   assert.equal(advisoryState(result.events[0], AT), "unknown");
   assert.match(result.limitations.join(" "), /nie ma końca ważności/);
   assert.match(buildSituation(snapshot([open]), { scope: "world", hours: 24 }).highlights[0].reason, /Końca ważności nie ustalono/);
+  const untilRevoked = { ...open, tags: ["until_revoked"] };
+  assert.match(formatSituationTime(untilRevoked, "validity"), /do odwołania według źródła/);
+  assert.match(buildSituation(snapshot([untilRevoked]), { scope: "world", hours: 24 }).highlights[0].reason, /ważność do odwołania/);
+  assert.equal(buildSituation(snapshot([{ ...untilRevoked, lifecycle_status: "unknown" }]), { scope: "world", hours: 24 }).events.length, 0);
 });
 
 test("withdrawn advisories remain withdrawn despite validity bounds, and missing start stays unknown", () => {
@@ -281,7 +304,7 @@ test("health warnings distinguish partial, failed, missing, old and successful e
   ] });
   const result = buildSituation(saved, { scope: "world", hours: 24 });
   assert.equal(result.cachedCount, 1);
-  assert.equal(result.sourceWarnings.filter((warning) => warning.includes("brak metadanych")).length, 5);
+  assert.equal(result.sourceWarnings.filter((warning) => warning.includes("brak metadanych")).length, PUBLIC_SOURCE_IDS.length - saved.sources.length);
   assert.match(result.sourceWarnings.find((warning) => warning.startsWith("USGS"))!, /błąd pobierania.*opóźniony/);
   assert.match(result.sourceWarnings.find((warning) => warning.startsWith("NASA"))!, /częściowe dane/);
   assert.match(result.sourceWarnings.find((warning) => warning.startsWith("GitHub"))!, /brak daty/);

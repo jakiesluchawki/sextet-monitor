@@ -1,6 +1,6 @@
 # Sextet Monitor web
 
-Polish interfaces for two separate runtimes: the local Phase 1 API application and the static public edition 02. No simulated records, cloud AI, model switch, third-party fonts or remote map tiles. Edition 02 changes how the existing nine public feeds are explored; it adds no data sources.
+Polish interfaces for two separate runtimes: the local Phase 1 API application and the static public edition 03. No simulated records, cloud AI, model switch, third-party fonts or remote map tiles. Edition 03 adds CERT Polska facts and links plus IMGW hydrological warnings (eleven public channels). Records without the required source clock are listed separately and excluded from time counts, maps and briefings.
 
 ## Public edition 02
 

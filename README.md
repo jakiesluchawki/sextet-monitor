@@ -2,18 +2,18 @@
 
 Monitor publicznych źródeł dla grupy: przegląd sytuacji, mapa, zapisy źródłowe i briefing do udostępnienia. Pełna instalacja z prywatną bazą, historią i pytaniami pozostaje lokalna. Kod powstał od zera, bez kopiowania World Monitor. Nie jest kompletnym obrazem świata ani narzędziem do decyzji operacyjnych o bezpieczeństwie.
 
-**Wersja 02 — kod z 5.09.2026:** nowy publiczny przegląd, globus, wyszukiwanie, lokalne przypięcia, porównanie zestawów i briefing. Nadal korzysta z tych samych dziewięciu źródeł; ta aktualizacja nie dodaje dostawców. [CHANGELOG](CHANGELOG.md) opisuje zmiany w kodzie, nie potwierdzenie bieżącego wdrożenia. Formalna próba 72 godzin nadal nie została wykonana.
+**Wersja 03 — kod z 5.09.2026:** 11 kanałów: dodano indeks odsyłaczy CERT Polska i ostrzeżenia hydrologiczne IMGW. Zapisy bez wiarygodnej daty mają osobną listę poza osią czasu. IODA pozostaje pilotażem, bez publikacji. [CHANGELOG](CHANGELOG.md) opisuje kod; bieżący stan odczytu pokazuje sama strona. Formalna próba 72 godzin nadal nie została wykonana.
 
 Repozytorium obejmuje pełną instalację lokalną oraz **oddzielny statyczny podgląd**. GitHub Pages nie uruchamia backendu ani prywatnej bazy; zakres zatwierdzonej publicznej wersji i kontrolowaną publikację opisuje [PUBLIC_PAGES](PUBLIC_PAGES.md).
 
 ## Co jest w tej wersji
 
-Dziewięć źródeł można czytać bez klucza: USGS, GDACS, MeteoAlarm dla Polski, EASA CZIB, CISA KEV, NASA EONET, NOAA SWPC, GitHub Status i Cloudflare Status. Wszystkie dziewięć obejmuje też niezależny zestaw Pages. Dziesiąty adapter, Cloudflare Radar, pozostaje lokalnie w stanie `needs_credentials` bez tokenu; nie jest tym samym co Cloudflare Status.
+Jedenaście kanałów można czytać bez klucza: USGS, GDACS, MeteoAlarm dla Polski, EASA CZIB, CISA KEV, NASA EONET, NOAA SWPC, GitHub Status, Cloudflare Status, CERT Polska i IMGW Hydrologia. Obejmuje je niezależny zestaw Pages. IMGW i polski MeteoAlarm mają wspólne pochodzenie; liczba kanałów nie jest liczbą potwierdzeń. Dodatkowy adapter Cloudflare Radar pozostaje lokalnie w stanie `needs_credentials` bez tokenu.
 
 Publiczna wersja ma trzy widoki:
 
 - **Przegląd** — globus z przełączeniem na mapę 2D, do ośmiu wyróżnień z jawnym powodem wyboru oraz oś czasu z tabelą wartości. Wyróżnienia zapewniają miejsce różnym kategoriom; nie są rankingiem zagrożeń.
-- **Mapa i dane** — dosłowne wyszukiwanie w tytułach, opisach, krajach i nazwach źródeł oraz filtry źródła i kategorii. Lista udostępnia kolejne strony całego wyniku; mapa ma jawny limit 500 rekordów. Brak geometrii pozostaje na liście, bez fikcyjnych punktów.
+- **Mapa i dane** — dosłowne wyszukiwanie w tytułach, opisach, krajach i nazwach źródeł oraz filtry źródła i kategorii. Lista udostępnia kolejne strony całego wyniku; mapa ma jawny limit 500 rekordów. Brak geometrii pozostaje na liście, bez fikcyjnych punktów. Zapisy bez wymaganego czasu mają osobną listę „Poza osią czasu”, niewliczaną do mapy, osi ani briefingu czasowego.
 - **Briefing** — wybór monitora albo własne przypięcia, do 12 pozycji z datami, oryginalnymi linkami i ograniczeniami. „Kopiuj do Signala” kopiuje tekst do schowka; niczego nie wysyła. Dostępny jest też zapis `.md` i druk/PDF przez przeglądarkę.
 
 Wybierz świat, Europę, Polskę lub dowolny kraj/terytorium z listy oraz 24 h, 72 h albo 7 dni. Okno kończy się w chwili przygotowania zestawu. Europa jest jawną listą krajów, z Cyprem i Kosowem, bez Rosji i Turcji; filtr korzysta z kodów krajów źródła, nie z przecięcia geometrii. Nie przypisuje globalnych usług ani nieznanych lokalizacji do wybranego regionu. Trzęsienia i katastrofy liczymy według początku zdarzenia, pogodę i lotnictwo według ważności, pozostałe kategorie według publikacji. Ostrzeżenie może występować w wielu przedziałach osi czasu, więc ich suma nie oznacza liczby unikalnych zdarzeń.

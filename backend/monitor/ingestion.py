@@ -21,6 +21,8 @@ from .lifecycle import effective_event_state
 
 RULE_VERSION = "identity-v1"
 NORMALIZER_VERSION = "1"
+CURRENT_LIST_SOURCE = "imgw_hydro"
+CURRENT_LIST_MISSING_TAG = "not_in_current_source_list"
 
 
 class LeaseLost(RuntimeError):
@@ -160,7 +162,10 @@ def _geo(conn, normal):
             countries.update(codes)
             if countries:
                 tags.add("country_from_natural_earth")
-    elif countries and result["location_precision"] in {"country", "area"}:
+    elif (countries and result["location_precision"] in {"country", "area"}
+          and result.get("source_id") != "imgw_hydro"):
+        # IMGW names catchments/provinces without publishing their geometry;
+        # Poland is coverage metadata, not the extent of every warning.
         polygon = conn.execute(text("""
             SELECT ST_AsGeoJSON(ST_Union(geom)) FROM countries WHERE iso2=ANY(:codes)
         """), {"codes": sorted(countries)}).scalar_one()
@@ -347,15 +352,62 @@ def _assert_cap_acyclic(normals):
         raise IdentityConflict("Cykl referencji CAP; odrzucono rekord zamykający cykl.")
 
 
+def _current_list_state(normal, last_seen_at, cursor):
+    """Absence weakens current-list evidence; it never fabricates a withdrawal."""
+    result = dict(normal)
+    complete_at = as_time(cursor.get("current_list_ingested_at"))
+    seen_at = as_time(last_seen_at)
+    tags = set(result.get("tags") or [])
+    if (result.get("source_id") == CURRENT_LIST_SOURCE and result.get("kind") == "advisory"
+            and result.get("lifecycle_status") == "active" and result.get("valid_to") is None
+            and {"current_list_not_archive", "until_revoked"} <= tags
+            and complete_at and seen_at and seen_at < complete_at):
+        result["lifecycle_status"] = "unknown"
+        result["tags"] = sorted(tags | {CURRENT_LIST_MISSING_TAG})
+    return result
+
+
+def _current_list_clock_invalid(source_id, metadata, cursor, now):
+    if source_id != CURRENT_LIST_SOURCE:
+        return False
+    fetched = as_time(metadata.get("current_list_fetched_at"))
+    previous = max(filter(None, (
+        as_time(cursor.get("current_list_fetched_at")),
+        as_time(cursor.get("latest_observed_fetched_at")),
+    )), default=None)
+    previous_ingested = max(filter(None, (
+        as_time(cursor.get("current_list_ingested_at")),
+        as_time(cursor.get("latest_observed_ingested_at")),
+    )), default=None)
+    return bool(
+        (metadata.get("current_list_complete") is True and fetched is None)
+        or (fetched and fetched > now + timedelta(minutes=5))
+        or (previous and (fetched is None or fetched <= previous))
+        or (previous_ingested and now <= previous_ingested)
+    )
+
+
+def _can_reconcile_current_list(source_id, metadata, *, partial, stale, invalid_clock):
+    return bool(source_id == CURRENT_LIST_SOURCE
+                and metadata.get("current_list_complete") is True
+                and as_time(metadata.get("current_list_fetched_at"))
+                and not (partial or stale or invalid_clock))
+
+
 def rebuild_event(conn, event_id, now, *, is_new=False, first_fetch=False, created_in_batch=False):
     previous = conn.execute(text("SELECT * FROM events WHERE id=:id FOR UPDATE"),
                             {"id": event_id}).mappings().one()
     rows = list(conn.execute(text("""
-        SELECT o.id,o.normalized,o.raw,o.retrieved_at FROM provider_records p
-        JOIN observations o ON o.id=p.latest_observation_id WHERE p.event_id=:id
+        SELECT o.id,o.normalized,o.raw,o.retrieved_at,p.last_seen_at AS provider_last_seen_at,
+          s.cursor AS source_cursor FROM provider_records p
+        JOIN observations o ON o.id=p.latest_observation_id
+        JOIN sources s ON s.id=p.source_id WHERE p.event_id=:id
     """), {"id": event_id}).mappings())
     if not rows:
         raise IdentityConflict("Brak aktualnego materiału źródłowego.")
+    rows = [{**row, "normalized": _current_list_state(
+        row["normalized"], row["provider_last_seen_at"], row["source_cursor"],
+    )} for row in rows]
     _assert_cap_acyclic([row["normalized"] for row in rows])
     # Prefer the original seismic source over a humanitarian republisher.
     priority = {"usgs": 0, "meteoalarm": 0, "easa_czib": 0, "cisa_kev": 0, "cloudflare_radar": 0, "gdacs": 1}
@@ -410,10 +462,35 @@ def rebuild_event(conn, event_id, now, *, is_new=False, first_fetch=False, creat
                     "withdrawn": "Źródło wycofało komunikat.",
                     "expired": "Upłynął zadeklarowany przez źródło termin ważności."}
     summary = descriptions[change]
-    if change == "updated" and normal == effective_event_state(previous["normal"], now):
+    if CURRENT_LIST_MISSING_TAG in normal["tags"] and CURRENT_LIST_MISSING_TAG not in previous["normal"]["tags"]:
+        fetched = candidates[0]["source_cursor"].get("current_list_fetched_at")
+        summary = (f"Brak komunikatu na kompletnej bieżącej liście IMGW pobranej {fetched}; "
+                   "stan nieznany, nie stwierdzono odwołania ani wygaśnięcia.")
+    elif CURRENT_LIST_MISSING_TAG in previous["normal"]["tags"] and CURRENT_LIST_MISSING_TAG not in normal["tags"]:
+        summary = "Komunikat ponownie obecny w źródle; stan wynika z aktualnego materiału źródłowego."
+    elif change == "updated" and normal == effective_event_state(previous["normal"], now):
         summary = "Przeliczono stan effective/onset CAP z zegara; materiał źródłowy nie zmienił się."
     _revision(conn, event_id, normal, now, change, summary + " Reguła " + RULE_VERSION + ".")
     return True
+
+
+def _reconcile_current_list(conn, source_id, now):
+    """Rebuild absent open-ended warnings after a complete-list cursor is stored."""
+    rows = list(conn.execute(text("""
+        SELECT DISTINCT e.id,e.last_seen_at FROM provider_records p
+        JOIN events e ON e.id=p.event_id
+        WHERE p.source_id=:source AND p.last_seen_at<:now
+          AND e.normal->>'source_id'=:source AND e.kind='advisory'
+          AND e.lifecycle_status='active' AND e.valid_to IS NULL
+    """), {"source": source_id, "now": now}).mappings())
+    changed = set()
+    for row in rows:
+        if rebuild_event(conn, row["id"], now):
+            # A missing item was not seen again; retain the last real observation clock.
+            conn.execute(text("UPDATE events SET last_seen_at=:seen WHERE id=:id"),
+                         {"seen": row["last_seen_at"], "id": row["id"]})
+            changed.add(row["id"])
+    return changed
 
 
 def relate_events(conn, changed_ids, now):
@@ -469,6 +546,7 @@ def persist_batch(conn, lease: Lease, batch: ProviderBatch, *, now=None):
         snapshot_at is None or snapshot_at > now + timedelta(minutes=5) or
         (prior_snapshot and snapshot_at < prior_snapshot)
     ))
+    invalid_current_list_clock = _current_list_clock_invalid(lease.source_id, batch.metadata, row["cursor"], now)
     records = [(event, False) for event in batch.events]
     if lease.source_id == "usgs":
         records.extend((event, True) for event in batch.metadata.get("reclassifications", []))
@@ -480,6 +558,10 @@ def persist_batch(conn, lease: Lease, batch: ProviderBatch, *, now=None):
             rejected += len(records)
             records = []
         snapshot_at = None
+    if invalid_current_list_clock:
+        warnings.append("IMGW: brak poprawnego nowego czasu pobrania bieżącej listy; zachowano poprzedni stan.")
+        rejected += len(records)
+        records = []
     for item, known_only in records:
         try:
             event = NormalizedEvent.model_validate(item) if known_only else item
@@ -511,7 +593,6 @@ def persist_batch(conn, lease: Lease, batch: ProviderBatch, *, now=None):
             rejected += 1
             if len(warnings) < 20:
                 warnings.append(f"Zapis: rekord odrzucony ({type(exc).__name__}); pozostałe dane zachowano.")
-    relate_events(conn, sorted(changed_ids, key=str), now)
     partial = bool(rejected or warnings or batch.metadata.get("partial") or batch.metadata.get("truncated"))
     stale_feed = bool(lease.source_id == "usgs" and generated and now - generated > timedelta(minutes=20))
     if lease.source_id == "usgs" and generated and generated > now + timedelta(minutes=5):
@@ -524,10 +605,27 @@ def persist_batch(conn, lease: Lease, batch: ProviderBatch, *, now=None):
         # This is an accepted provenance high-water mark, not a complete-fetch cursor.
         # Per-record clocks allow the same partial snapshot to be retried safely.
         cursor["latest_snapshot_at"] = max(snapshot_at, prior_snapshot or snapshot_at).isoformat()
+    if lease.source_id == CURRENT_LIST_SOURCE and not invalid_current_list_clock:
+        observed_fetched = as_time(batch.metadata.get("current_list_fetched_at"))
+        if observed_fetched:
+            # A partial read still supplies newer evidence of the records it
+            # contains. A delayed complete list must not overrule that evidence.
+            cursor["latest_observed_fetched_at"] = observed_fetched.isoformat()
+            cursor["latest_observed_ingested_at"] = now.isoformat()
     if not partial and not stale_feed:
         cursor.update(initialized=True, last_complete_at=now.isoformat())
         if batch.metadata.get("repair_window") == "week":
             cursor["last_repair_at"] = now.isoformat()
+    if _can_reconcile_current_list(lease.source_id, batch.metadata, partial=partial, stale=stale_feed,
+                                   invalid_clock=invalid_current_list_clock):
+        cursor["current_list_fetched_at"] = as_time(batch.metadata["current_list_fetched_at"]).isoformat()
+        cursor["current_list_ingested_at"] = now.isoformat()
+        # The source lease and global ingestion lock fence this marker and every
+        # derived revision in the same transaction. Immutable observations stay intact.
+        conn.execute(text("UPDATE sources SET cursor=CAST(:cursor AS jsonb) WHERE id=:source"),
+                     {"source": lease.source_id, "cursor": json_value(cursor)})
+        changed_ids.update(_reconcile_current_list(conn, lease.source_id, now))
+    relate_events(conn, sorted(changed_ids, key=str), now)
     newest = max((t for event in accepted for t in (
         event.source_updated_at, event.issued_at, event.occurred_start
     ) if t is not None and t <= now), default=None)
@@ -539,7 +637,7 @@ def persist_batch(conn, lease: Lease, batch: ProviderBatch, *, now=None):
     if stale_feed:
         message = "USGS: feed wygenerowano ponad 20 minut temu; poprawny HTTP nie oznacza aktualnej treści."
     if partial and not message:
-        message = "Odczyt częściowy; kursor nie został przesunięty."
+        message = "Odczyt częściowy; znacznik kompletnego odczytu nie został przesunięty."
     conn.execute(text("""
         UPDATE sources SET status=:status,last_success_at=CASE WHEN :has_data OR NOT :partial THEN :now
           ELSE last_success_at END,newest_content_at=GREATEST(:newest,newest_content_at),

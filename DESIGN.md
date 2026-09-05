@@ -27,7 +27,7 @@ Keyboard: skip link, native controls, visible focus, selectable records, source 
 
 ## Source and time semantics
 
-Edition 02 uses the same nine public feeds. No visual treatment implies new coverage or nine independent confirmations. The overview selects category representatives using source dates and documented source severity, with limited repetition; it does not compute a threat ranking, anomaly score or cause.
+Edition 03 uses eleven public channels, including a facts-and-links index from CERT Polska and IMGW hydrological warnings. Channel count never implies independent confirmation; IMGW also originates Polish MeteoAlarm data. Undated records remain visible in a separate list without entering time counts, maps or time-bounded briefings. The overview selects category representatives using source dates and documented source severity, with limited repetition; it does not compute a threat ranking, anomaly score or cause.
 
 Scope uses explicit source country codes. Europe is the application's declared country list, not a geometry intersection; countryless and global records are not silently assigned to a region. The data window ends at the snapshot's publication clock. The device clock only affects freshness messages.
 

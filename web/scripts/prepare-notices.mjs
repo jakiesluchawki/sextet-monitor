@@ -9,6 +9,7 @@ const parts=[
   "This file preserves upstream notices. It does not license the application's original code.",
   "Map data: Natural Earth, public domain. https://www.naturalearthdata.com/about/terms-of-use/",
   "Public data: USGS with originating networks; MeteoAlarm/EUMETNET and IMGW-PIB (CC BY 4.0, transformed); CISA KEV (CC0). Source-specific links appear beside the evidence.",
+  "CERT Polska / NASK: public RSS facts and links only; no article text or source titles redistributed. IMGW-PIB hydrological warnings: transformed data for non-commercial personal use without advertisements, with source attribution and applicable IMGW terms. Neither source is relicensed by the application.",
   "Additional public records: GDACS; EASA CZIB; NASA EONET; NOAA SWPC; GitHub Status; Cloudflare Status. Provider-specific attribution, coverage and usage conditions accompany each source and its evidence. Service status reports are provider statements, not independent measurements of the internet.",
 ];
 let count=0;

@@ -26,6 +26,8 @@ ALLOWED_PREFIXES = {
     "services.swpc.noaa.gov": ("/products/alerts.json",),
     "www.githubstatus.com": ("/api/v2/incidents.json",),
     "www.cloudflarestatus.com": ("/api/v2/incidents.json",),
+    "moje.cert.pl": ("/advisory_feed/advisory/feed/",),
+    "hydro-back.imgw.pl": ("/alerts/warnings/hydro/getCurrentWarnings",),
 }
 
 

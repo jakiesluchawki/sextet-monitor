@@ -1,5 +1,15 @@
 # Zmiany
 
+## 03 — 5.09.2026
+
+- Dodano dwa kanały do niezależnego zestawu publicznego: CERT Polska (indeks dat i odsyłaczy do komunikatów dla użytkowników) i IMGW (ostrzeżenia hydrologiczne z jawnymi datami UTC). Razem 11 kanałów; wspólne pochodzenie IMGW/MeteoAlarm nie zwiększa niezależnego potwierdzenia.
+- CERT: bez kopiowania treści artykułów i źródłowych tytułów, bez kraju oddziaływania wywiedzionego z wydawcy. RSS obejmuje ostatnie 10 odsyłaczy, nie archiwum.
+- IMGW: ważność do odwołania, kod suszy poza skalą porządkową, jawne aktualizacje bez powiązania historycznego i brak fikcyjnej geometrii. Lokalny monitor oznacza brak otwartego ostrzeżenia na pełnej aktualnej liście jako stan nieustalony, nie potwierdzenie odwołania.
+- Osobna lista „Poza osią czasu” ujawnia zapisy bez wiarygodnej daty wymaganej dla danej kategorii. Nie dodaje ich do wybranego okna, mapy ani briefingu czasowego. Podpisy przypięć uwzględniają tę granicę.
+- IODA pozostaje niepublikowanym pilotażem: niepotwierdzony feed zdarzeń i warunki redystrybucji. Nie dodano kont, kluczy, usług AI ani prywatnych danych.
+- Testy parserów, sieci, kontraktu publicznego, filtrów oraz izolowanej bazy poprzedzają publikację. Sam wpis w changelogu nie potwierdza bieżącego wdrożenia.
+
+
 ## 0.2.1 — 5.09.2026
 
 - Stałe skróty to świat, Europa i Polska. Pozostałe kraje i terytoria wybiera się z podpisanej listy; Turcja nie jest już wyróżniona. Do ośmiu własnych ulubionych obszarów pozostaje w tej przeglądarce, z obsługą zmian między kartami i błędów zapisu.
