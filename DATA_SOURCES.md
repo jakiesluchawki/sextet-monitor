@@ -91,7 +91,7 @@ Zatwierdzony snapshot researchu (historyczny materiał lokalny, poza repozytoriu
 
 ## Co pozostaje poza integracją
 
-Bezpośrednie FIRMS, IMGW hydro/pomiary, EMSC, Open-Meteo/ECMWF, IODA, GDELT, ReliefWeb, NOTAM, AIS/GNSS oraz dane energetyczne i rynkowe pozostają kandydatami, nie uruchomionymi bezpośrednio źródłami. FIRMS może występować jako pochodzenie wpisu GDACS/EONET. Rozszerzenie wymaga sprawdzenia konkretnego produktu, dostępu, praw archiwizacji i rzeczywistego payloadu. Detekcje termiczne nie mogą stać się automatycznie „potwierdzonymi pożarami”. IMGW hydro wymaga między innymi potwierdzenia strefy czasowej pomiarów i interpretacji specjalnych dat/stopni ostrzeżeń.
+Bezpośrednie FIRMS, pomiary rzek IMGW, EMSC, Open-Meteo/ECMWF, IODA, GDELT, ReliefWeb, NOTAM, AIS/GNSS oraz dane energetyczne i rynkowe pozostają kandydatami, nie uruchomionymi bezpośrednio źródłami. FIRMS może występować jako pochodzenie wpisu GDACS/EONET. Rozszerzenie wymaga sprawdzenia konkretnego produktu, dostępu, praw archiwizacji i rzeczywistego payloadu. Detekcje termiczne nie mogą stać się automatycznie „potwierdzonymi pożarami”. Pomiary rzek IMGW wymagają między innymi potwierdzenia strefy czasowej i interpretacji stanu stacji; ostrzeżenia hydrologiczne są już podłączone i opisane poniżej.
 
 Licencja aplikacji lub biblioteki nie przyznaje prawa do publikacji feedów. Dane i atrybucja pozostają powiązane z konkretnym źródłem; eksport lub użycie komercyjne wymagają osobnego przeglądu.
 
