@@ -6,7 +6,7 @@ Pages służy do hostowania plików statycznych; nie uruchamia FastAPI, PostGIS 
 
 ## Co obejmuje zestaw
 
-Zestaw obejmuje **jedenaście kanałów**: USGS, MeteoAlarm Polska, CISA KEV, GDACS, EASA CZIB, NASA EONET, NOAA SWPC, GitHub Status, Cloudflare Status, CERT Polska i IMGW Hydrologia, pobrane od nowa do oddzielnej bazy. Widoczna liczba rekordów i stan źródeł zależą od konkretnego zestawu. CERT udostępnia wyłącznie indeks dat i odsyłaczy bez treści artykułów; IMGW obejmuje ostrzeżenia, nie pomiary rzek. Warunki użycia IMGW odnoszą się do obecnego niezarobkowego projektu bez reklam; nie deklarujemy prawa do zastosowania komercyjnego. IODA nie jest publikowana.
+Zestaw obejmuje **jedenaście kanałów**: USGS, MeteoAlarm Polska, CISA KEV, GDACS, EASA CZIB, NASA EONET, NOAA SWPC, GitHub Status, Cloudflare Status, CERT Polska i IMGW Hydrologia, pobrane od nowa do oddzielnej bazy. Widoczna liczba rekordów i stan źródeł zależą od konkretnego zestawu. W Sextet publikujemy z CERT wyłącznie indeks dat i odsyłaczy, bez treści artykułów; IMGW obejmuje ostrzeżenia, nie pomiary rzek. Warunki użycia IMGW odnoszą się do obecnego niezarobkowego projektu bez reklam; nie deklarujemy prawa do zastosowania komercyjnego. IODA nie jest publikowana.
 
 Publiczna wersja zawiera przegląd z wyróżnieniami, globus/mapę 2D, listę, oś czasu, dosłowne wyszukiwanie, filtry źródła i kategorii, daty wystąpienia, publikacji i ważności oraz dowody, odnośniki i atrybucję. Briefing i porównanie dwóch zestawów są lokalnymi operacjami przeglądarki. Nie ma pytań do prywatnej bazy, historii operatora, surowych payloadów, promienia PostGIS, AI ani tokenów. Radar pozostaje poza publicznym zestawem. „Odśwież” pobiera nowszy opublikowany plik; nie odpytuje dostawców i nie steruje prywatnym workerem.
 
